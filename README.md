@@ -45,6 +45,7 @@ Installation（導入）
 ========================================
 
 ##Using raw code  
+
 **1.Put the core file in the same directory as the source code.**  
 　コアファイルをソースコードと同じディレクトリに入れてください。  
 
@@ -62,6 +63,7 @@ use Verugent::core::*;
 ```
 
 ##Using Library  
+
 **1. Use Cargo's function to generate the project folder.  
 　And add this code in cargo.toml file.**  
 　Cargoのプロジェクト生成機能を使ってプロジェクトフォルダを作成してください。  
@@ -178,7 +180,7 @@ Always:
 	--Drive edge setting--  
 	Posedge(Box<E>)						Drive always block(positive edge)  
 	Negedge(Box<E>)						Drive always block(negative edge)  
-	Nonedge()							Non drive signal  
+	Nonedge()								Non drive signal  
 	
 	--Substitution setting--  
 	non()								Nonblocking substitution  
@@ -186,8 +188,8 @@ Always:
 	
 Function:  
 	func(&str, i32)						Generate function  
-	Input(&str, i32)					Function input setting  
-    own()								Function name AST generate(using build function AST)  
+	Input(&str, i32)						Function input setting  
+    own()									Function name AST generate(using build function AST)  
 	
 Assign:  
 	_e(Box<E>)							Assign AST setting  
@@ -203,8 +205,8 @@ FSM(Finite State machine):
 Branch Method:  
 	--if - else--  
 	If(Box<E>, Vec<Box<E>>)				If AST setting(if)  
-	Else_If(Box<E>, Vec<Box<E>>)		If AST setting(else if)  
-	Else(Vec<Box<E>>)					If AST setting(else)  
+	Else_If(Box<E>, Vec<Box<E>>)			If AST setting(else if)  
+	Else(Vec<Box<E>>)						If AST setting(else)  
 	
 	--case--  
 	Case(Box<E>)						Case block setting  
@@ -218,12 +220,12 @@ Common Items:
 	F!( Formula )						Operator syntax that  
     									could not be implemented with overloading.  
 					Formula -->		= : Substitution  
-        							==: Equal  
-									!=: Not equal  
-									<=: More and equal  
-									>=: Less and equal  
-									< : More than  
-									> : Less than  
+        								==: Equal  
+										!=: Not equal  
+										<=: More and equal  
+										>=: Less and equal  
+										< : More than  
+										> : Less than  
 	
 	func_args!( (Box<E>)* )			Pass the coated argment in Box.  
 	
