@@ -61,7 +61,7 @@ mod Verugent;
 use Verugent::core::*;  
 ```
 
-##Using Library
+##Using Library  
 **1. Use Cargo's function to generate the project folder.  
 　And add this code in cargo.toml file.**  
 　Cargoのプロジェクト生成機能を使ってプロジェクトフォルダを作成してください。  
