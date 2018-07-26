@@ -9,10 +9,10 @@ Copyright (C) 2018, K.Takano
 License
 ========================================
 
-Apache License (Version 2.0)
-http://www.apache.org/licenses/LICENSE-2.0
+Apache License (Version 2.0)  
+http://www.apache.org/licenses/LICENSE-2.0  
 
-What's VeRuGent? (VeRuGentとは？)
+What's VeRuGent? (VeRuGentとは？)  
 ========================================
 
 VeRuGent for "Verilog from Rust : Generation Toolkit"  
@@ -25,7 +25,7 @@ This generates only Verilog code.
 本ツールは論理合成は行いません。(高位合成も対象外です)  
 生成されるのは構築したVerilogのコードのみです。  
 
-VeRuGent is provides a light-weight AST construction method of Verilog HDL.
+VeRuGent is provides a light-weight AST construction method of Verilog HDL.  
 You can build up design written in Verilog HDL with less failure by using the Rust's high safety inspection function.  
 (At the moment, This functions and safety is insufficient. So ,it is future task to update this tools.)  
 簡易化したVerilogHDLのAST構築技術を提供します。Rustの持つ高い安全検査機能を利用することで、  
@@ -44,45 +44,45 @@ Requirements (推奨環境)
 Installation（導入）
 ========================================
 
-###Using raw code
-**1.Put the core file in the same directory as the source code.**
-　コアファイルをソースコードと同じディレクトリに入れてください。
+##Using raw code  
+**1.Put the core file in the same directory as the source code.**  
+　コアファイルをソースコードと同じディレクトリに入れてください。  
 
-**2.Add modules:**
-モジュールの追加
+**2.Add modules:**  
+モジュールの追加  
 ```text
-mod Verugent;
+mod Verugent;  
 ```
 
-**3.Declare the use of the core and macro within the block to be used.**
-　ライブラリとマクロ使用の宣言をしてください。
+**3.Declare the use of the core and macro within the block to be used.**  
+　ライブラリとマクロ使用の宣言をしてください。  
 ```text
-#[macro_use]
-use Verugent::core::*;
+#[macro_use]  
+use Verugent::core::*;  
 ```
 
-####Using Library
-**1. Use Cargo's function to generate the project folder.
-　And add this code in cargo.toml file.**
-　Cargoのプロジェクト生成機能を使ってプロジェクトフォルダを作成してください。
-　その後、cargo.tomlファイルに以下の記述を付け加えてください。
+##Using Library
+**1. Use Cargo's function to generate the project folder.  
+　And add this code in cargo.toml file.**  
+　Cargoのプロジェクト生成機能を使ってプロジェクトフォルダを作成してください。  
+　その後、cargo.tomlファイルに以下の記述を付け加えてください。  
 
 ```text
-[dependencies.varugent]
-git = "https://github.com/RuSys/Verugent.git"
+[dependencies.varugent]  
+git = "https://github.com/RuSys/Verugent.git"  
 ```
 
-**2. Declare the use of the core and macro within the block to be used.**
-　下記のコードをmainファイルに記述してライブラリおよびマクロの使用宣言をしてください。
+**2. Declare the use of the core and macro within the block to be used.**  
+　下記のコードをmainファイルに記述してライブラリおよびマクロの使用宣言をしてください。  
 ```text
-#[macro_use]
-extern crate Verugent;
-use Verugent::core::*;
+#[macro_use]  
+extern crate Verugent;  
+use Verugent::core::*;  
 ```
 
 
-**It's only.**
-たったこれだけ！
+**It's only.**  
+たったこれだけ！  
 
 Getting Started
 ========================================
@@ -151,89 +151,89 @@ If you build and run this code, you can see the output verilog code as a result.
   
 Method cheat sheet
 ======================================
-wire, register, input and output port setting method
+wire, register, input and output port setting method  
 ```
-Input(&str, Box<E> or i32)				Input port
-Output(&str, Box<E> or i32)				Output port
-Reg_Output(&str, Box<E> or i32)			Output port(register)
-Inout(&str, Box<E> or i32)				Inout port
-Param(&str, i32)						Global parameter
-LParam(&str, i32)						Local parameter
-Wire(&str, Box<E> or i32)				Wire setting
-Reg(&str, Box<E> or i32)				Register setting
+Input(&str, Box<E> or i32)				Input port  
+Output(&str, Box<E> or i32)				Output port  
+Reg_Output(&str, Box<E> or i32)			Output port(register)  
+Inout(&str, Box<E> or i32)				Inout port  
+Param(&str, i32)						Global parameter  
+LParam(&str, i32)						Local parameter  
+Wire(&str, Box<E> or i32)				Wire setting  
+Reg(&str, Box<E> or i32)				Register setting  
 
-Mem(&str, Box<E> or i32, Box<E> or i32)	Array register setting
+Mem(&str, Box<E> or i32, Box<E> or i32)	Array register setting  
 ```
   
-Control block method
+Control block method  
 ```
-Always(Always-AST struct)				Always block setting
-Function(Function-AST struct)			Function block setting
-Assign(Assign-AST struct)				Assign block setting
+Always(Always-AST struct)				Always block setting  
+Function(Function-AST struct)			Function block setting  
+Assign(Assign-AST struct)				Assign block setting  
 ```
   
-In-block AST
+In-block AST  
 ```
-Always:
-	--Drive edge setting--
-	Posedge(Box<E>)						Drive always block(positive edge)
-	Negedge(Box<E>)						Drive always block(negative edge)
-	Nonedge()							Non drive signal
+Always:  
+	--Drive edge setting--  
+	Posedge(Box<E>)						Drive always block(positive edge)  
+	Negedge(Box<E>)						Drive always block(negative edge)  
+	Nonedge()							Non drive signal  
 	
-	--Substitution setting--
-	non()								Nonblocking substitution
-	block()								Blocking substitution
+	--Substitution setting--  
+	non()								Nonblocking substitution  
+	block()								Blocking substitution  
 	
-Function:
-	func(&str, i32)						Generate function
-	Input(&str, i32)					Function input setting
-    own()								Function name AST generate(using build function AST)
+Function:  
+	func(&str, i32)						Generate function  
+	Input(&str, i32)					Function input setting  
+    own()								Function name AST generate(using build function AST)  
 	
-Assign:
-	_e(Box<E>)							Assign AST setting
+Assign:  
+	_e(Box<E>)							Assign AST setting  
 	
-FSM(Finite State machine):
-	Clock_Reset(Box<E>, Box<E>)			Clock and Reset signal setting for FSM to drive
-	State(&str)							State register name setting
-	AddState(&str)						Add new state
-    goto(&str)							Designation of state transition destination
-	from(&str)							Transition to current state
-	Current(&str)						Change current state
-	Param(&str)							Get parameter AST in fsm
-Branch Method:
-	--if - else--
-	If(Box<E>, Vec<Box<E>>)				If AST setting(if)
-	Else_If(Box<E>, Vec<Box<E>>)		If AST setting(else if)
-	Else(Vec<Box<E>>)					If AST setting(else)
+FSM(Finite State machine):  
+	Clock_Reset(Box<E>, Box<E>)			Clock and Reset signal setting for FSM to drive  
+	State(&str)							State register name setting  
+	AddState(&str)						Add new state  
+    goto(&str)							Designation of state transition destination  
+	from(&str)							Transition to current state  
+	Current(&str)						Change current state  
+	Param(&str)							Get parameter AST in fsm  
+Branch Method:  
+	--if - else--  
+	If(Box<E>, Vec<Box<E>>)				If AST setting(if)  
+	Else_If(Box<E>, Vec<Box<E>>)		If AST setting(else if)  
+	Else(Vec<Box<E>>)					If AST setting(else)  
 	
-	--case--
-	Case(Box<E>)						Case block setting
-    S(Box<E>, Vec<Box<E>>)				Process for each "case label"
+	--case--  
+	Case(Box<E>)						Case block setting  
+    S(Box<E>, Vec<Box<E>>)				Process for each "case label"  
 
-Common Items:
-	--method--
-	Form(Box<E>)						In block formula
+Common Items:  
+	--method--  
+	Form(Box<E>)						In block formula  
 	
-	--Macro--
-	F!( Formula )						Operator syntax that 
-    									could not be implemented with overloading.
-					Formula -->		= : Substitution
-        							==: Equal
-									!=: Not equal
-									<=: More and equal
-									>=: Less and equal
-									< : More than
-									> : Less than
+	--Macro--  
+	F!( Formula )						Operator syntax that  
+    									could not be implemented with overloading.  
+					Formula -->		= : Substitution  
+        							==: Equal  
+									!=: Not equal  
+									<=: More and equal  
+									>=: Less and equal  
+									< : More than  
+									> : Less than  
 	
-	func_args!( (Box<E>)* )			Pass the coated argment in Box.
+	func_args!( (Box<E>)* )			Pass the coated argment in Box.  
 	
 	
 ```
 
 Update history
 ======================================
-2017/09/20:  Development started
-2017/11/18:  Add formula macro
-2018/01/20:  Add FSM making method
-2018/06/30:  Add Syntax decomposition and output function
-2018/07/27:  Release first product on Github
+2017/09/20:  Development started  
+2017/11/18:  Add formula macro  
+2018/01/20:  Add FSM making method  
+2018/06/30:  Add Syntax decomposition and output function  
+2018/07/27:  Release first product on Github  
