@@ -1,0 +1,6 @@
+[package]
+name = "verugent"
+version = "0.1.0"
+authors = ["Mercye"]
+
+[dependencies]
