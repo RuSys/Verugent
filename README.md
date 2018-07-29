@@ -44,7 +44,7 @@ Requirements (推奨環境)
 Installation（導入）
 ========================================
 
-##Using raw code  
+## Using raw code  
 
 **1.Put the core file in the same directory as the source code.**  
 　コアファイルをソースコードと同じディレクトリに入れてください。  
@@ -62,7 +62,7 @@ mod Verugent;
 use Verugent::core::*;  
 ```
 
-##Using Library  
+## Using Library  
 
 **1. Use Cargo's function to generate the project folder.  
 　And add this code in cargo.toml file.**  
