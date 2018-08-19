@@ -57,7 +57,7 @@ mod Verugent;
 
 **3.Declare the use of the core and macro within the block to be used.**  
 　ライブラリとマクロ使用の宣言をしてください。  
-```text
+```rust
 #[macro_use]  
 use Verugent::core::*;  
 ```
@@ -69,14 +69,14 @@ use Verugent::core::*;
 　Cargoのプロジェクト生成機能を使ってプロジェクトフォルダを作成してください。  
 　その後、cargo.tomlファイルに以下の記述を付け加えてください。  
 
-```text
+```toml
 [dependencies.varugent]  
 git = "https://github.com/RuSys/Verugent.git"  
 ```
 
 **2. Declare the use of the core and macro within the block to be used.**  
 　下記のコードをmainファイルに記述してライブラリおよびマクロの使用宣言をしてください。  
-```text
+```rust
 #[macro_use]  
 extern crate Verugent;  
 use Verugent::core::*;  
@@ -96,7 +96,7 @@ Let's use Verugent as an example of LED lighting circuit.
 
 If you want to know the contents of the LED circuit code written in Rust, Read led.rs file.  
 LED回路のコードが読みたい場合はled.rsを参照してください。  
-```
+```rust
     #[macro_use]
     extern crate Ve_RuGens;
 
@@ -108,7 +108,7 @@ LED回路のコードが読みたい場合はled.rsを参照してください�
 ```
 If you build and run this code, you can see the output verilog code as a result.  
 コードが実行されたらVerilogコードが出力されます。  
-```
+```verilog
     module LED (
         input  CLK,
         input  RST,
