@@ -7,9 +7,9 @@ pub fn led(){
 
     let clk  = m.Input("CLK", 1);
     let rst  = m.Input("RST", 1);
-    let btn1 = m.Input("BTN1", 1);
-    let btn2 = m.Input("BTN2", 1);
-    let mut led = m.Output("LED", 8);
+    let btn1 = m.Input("i_BTN1", 1);
+    let btn2 = m.Input("i_BTN2", 1);
+    let mut led = m.Output("o_LED", 8);
 
     let mut fsm = Clock_Reset(clk.clone(),rst.clone())
                 .State("State")
@@ -19,6 +19,6 @@ pub fn led(){
     let run = fsm.Param("RUN");
     let fstate = m.FSM(fsm);
 
-    m.Assign(led._e(_Branch(F!(fstate == run), _Num(8), _Num(0))));
+    m.Assign(led._e(_Branch(F!(fstate == run), _Num(255), _Num(0))));
     m.endmodule();
 }

@@ -1274,6 +1274,12 @@ fn _Div(L : Box<E>, R : Box<E>) -> Box<E>{
     Box::new(E::Bin( "div".to_string(), L, R))
 }
 
+/// "%" modulo
+#[allow(non_snake_case)]
+fn _Mod(L : Box<E>, R : Box<E>) -> Box<E> {
+    Box::new(E::Bin( "mod".to_string(), L, R))
+} 
+
 /// "||" or
 #[allow(non_snake_case)]
 fn _LOr(L : Box<E>, R : Box<E>) -> Box<E>{
@@ -1362,6 +1368,14 @@ pub trait Notc {
 
 impl Notc for Box<E> {
     fn not(&mut self) -> Box<E> {
+        Box::new(E::No(self.clone()))
+    }
+}
+
+impl Not for Box<E> {
+    type Output = Box<E>;
+
+    fn not(self) -> Box<E> {
         Box::new(E::No(self.clone()))
     }
 }
@@ -1459,6 +1473,30 @@ impl Div<Box<E>> for i32 {
 
     fn div(self, other: Box<E>) -> Box<E> {
         _Div(_Num(self), other)
+    }
+}
+
+impl Rem<Box<E>> for Box<E> {
+    type Output = Box<E>;
+
+    fn rem(self, other: Box<E>) ->Box<E> {
+        _Mod(self, other)
+    }
+}
+
+impl Rem<i32> for Box<E> {
+    type Output = Box<E>;
+
+    fn rem(self, other: i32) -> Box<E> {
+        _Mod(self, _Num(other))
+    }
+}
+
+impl Rem<Box<E>> for i32 {
+    type Output = Box<E>;
+
+    fn rem(self, other: Box<E>) -> Box<E> {
+        _Mod(_Num(self), other)
     }
 }
 
@@ -1718,7 +1756,7 @@ impl Addr<Box<E>> for Box<E>{
 /// 分解出力関数
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-fn DeconpAST(ast: Box<E>, cnfg: &str, indent: i32) {
+fn DeconpAST(Parenthesis: bool, ast: Box<E>, cnfg: &str, indent: i32) {
     let e = *ast;
     match e {
         E::Bin(ref bin, ref l, ref r) => {
@@ -1726,16 +1764,27 @@ fn DeconpAST(ast: Box<E>, cnfg: &str, indent: i32) {
             for _ in 0..indent {
                 print!("    ");
             }
-            DeconpAST(l.clone(),cnfg, 0);
-            match tmp {
+            if Parenthesis {
+                match tmp.clone() {
+                    "add" => print!("("),
+                    "sub" => print!("("),
+                    "or" => print!("("),
+                    "lor" =>print!("("),
+                    _ => print!(""),
+                }
+            }
+            let mut pareset = false;
+            DeconpAST(false ,l.clone(),cnfg, 0);
+            match tmp.clone() {
                 "add" => print!("+"),
                 "sub" => print!("-"),
-                "mul" => print!("*"),
-                "div" => print!("/"),
+                "mul" => {print!("*"); pareset = true},
+                "div" => {print!("/"); pareset = true},
+                "mod" => {print!("%"); pareset = true},
                 "or"  => print!("|"),
-                "and" => print!("&"),
+                "and" => {print!("&"); pareset = true},
                 "lor"  => print!("||"),
-                "land" => print!("&&"),
+                "land" => {print!("&&"); pareset = true},
                 "lshift" => print!("<<"),
                 "rshift" => print!(">>"),
                 "equal" => print!("=="),
@@ -1744,9 +1793,18 @@ fn DeconpAST(ast: Box<E>, cnfg: &str, indent: i32) {
                 "less_than" => print!(">"),
                 "or_more" => print!("<="),
                 "or_less" => print!(">="),
-                _ => return,
+                _ => panic!("No correspond syntax"),
             }
-            DeconpAST(r.clone(),cnfg, 0);
+            DeconpAST(pareset, r.clone(),cnfg, 0);
+            if Parenthesis {
+                match tmp {
+                    "add" => print!(")"),
+                    "sub" => print!(")"),
+                    "or" => print!(")"),
+                    "lor" =>print!(")"),
+                    _ => print!(""),
+                }
+            }
         }
         E::Ldc(ref wr) => {
             print!("{}",wr.getName());
@@ -1756,25 +1814,25 @@ fn DeconpAST(ast: Box<E>, cnfg: &str, indent: i32) {
         },
         E::PL(ref d, ref t, ref f) => {
             print!("(");
-            DeconpAST(d.clone(),cnfg, 0);
+            DeconpAST(false,d.clone(),cnfg, 0);
             print!(")? ");
-            DeconpAST(t.clone(),cnfg, 0);
+            DeconpAST(false, t.clone(),cnfg, 0);
             print!(": ");
-            DeconpAST(f.clone(),cnfg, 0);
+            DeconpAST(false, f.clone(),cnfg, 0);
             print!("");
         },
         E::SB(ref l, ref r) => {
             for _ in 0..indent {
                 print!("    ");
             }
-            DeconpAST(l.clone(),cnfg, indent);
+            DeconpAST(false, l.clone(),cnfg, indent);
             if cnfg.to_string() == "brock".to_string() {
                 print!(" = ");
             }
             else {
                 print!(" <= ");
             }
-            DeconpAST(r.clone(),cnfg, 0);
+            DeconpAST(false, r.clone(),cnfg, 0);
             println!(";");
         },
         E::CS(ref c) => {
@@ -1788,15 +1846,15 @@ fn DeconpAST(ast: Box<E>, cnfg: &str, indent: i32) {
         E::MEM(ref m, ref a) => {
             let ma = &*m;
             let aa = &*a;
-            DeconpAST(ma.clone(),cnfg, indent);
+            DeconpAST(false, ma.clone(),cnfg, indent);
             print!("[");
-            DeconpAST(aa.clone(),cnfg, 0);
+            DeconpAST(false, aa.clone(),cnfg, 0);
             print!("]");
         }
         E::No(ref b) => {
             let bb = &*b;
             print!("~");
-            DeconpAST(bb.clone(),cnfg, 0);
+            DeconpAST(false, bb.clone(),cnfg, 0);
         }
         _ => {
             return
@@ -1948,10 +2006,10 @@ fn PrintAssign(Assign: Vec<Assign>) -> bool {
     for mut x in tmp {
         let LO = x.LOut();
         print!("    assign ");
-        DeconpAST(LO, "", 0);
+        DeconpAST(false, LO, "", 0);
         print!(" = ");
         let port_set = x.ROut();
-        DeconpAST(port_set, "", 0);
+        DeconpAST(false, port_set, "", 0);
         println!(";");
     }
     println!("");
@@ -1989,7 +2047,7 @@ fn PrintAlways(Always: Vec<Always>) -> bool {
         }
         print!(") begin\n");
         for st in x.stmt.clone() {
-            DeconpAST(st,&x.clone().blockout(), 2);
+            DeconpAST(false, st,&x.clone().blockout(), 2);
         }
         
         println!("    end")
@@ -2006,7 +2064,7 @@ fn PrintFunction(Function: Vec<Func_AST>) -> bool {
         let e = x.top;
         if let E::Ldc(wrtop) = (*e).clone() {
             print!("\n    function [{}:0] ", wrtop.getWidth()-1);
-            DeconpAST(e, "", 1);
+            DeconpAST(false, e, "", 1);
             println!(";");
         }
         for inpt in x.input {
@@ -2014,18 +2072,18 @@ fn PrintFunction(Function: Vec<Func_AST>) -> bool {
             if let E::Ldc(wr) = (*i).clone() {
                 if wr.getWidth() > 0 {
                     print!("        input [{}:0]", wr.getWidth()-1);
-                    DeconpAST(i, "",2);
+                    DeconpAST(false, i, "",2);
                     println!(";");
                 }
                 else {
                     println!("        input ");
-                    DeconpAST(i, "", 2);
+                    DeconpAST(false, i, "", 2);
                     println!(";");
                 }
             }
         }
         for st in x.stmt {
-            DeconpAST(st, "", 2);
+            DeconpAST(false, st, "", 2);
         }
         println!("    endfunction\n");
     }
@@ -2053,7 +2111,7 @@ fn PrintIf(If_Stmt: Vec<IfStmt_AST>, cnfg: &str, indent: i32) -> bool {
                     }
                     print!("if(");
                     num += 1;
-                    DeconpAST(x.getTerms(), "", 0);
+                    DeconpAST(false, x.getTerms(), "", 0);
                     print!(")\n");
                 }
             }
@@ -2063,7 +2121,7 @@ fn PrintIf(If_Stmt: Vec<IfStmt_AST>, cnfg: &str, indent: i32) -> bool {
                 print!("    ");
             }
             print!("else if(");
-            DeconpAST(x.getTerms(), "",0);
+            DeconpAST(false, x.getTerms(), "",0);
             print!(")\n");
         }
         else {
@@ -2080,7 +2138,7 @@ fn PrintIf(If_Stmt: Vec<IfStmt_AST>, cnfg: &str, indent: i32) -> bool {
             print!("begin\n")
             }
         for y in n.clone() {
-            DeconpAST(y,cnfg, indent + 1);
+            DeconpAST(false, y,cnfg, indent + 1);
         }
         if n.len() > 1 {
             for _ in 0..indent {
@@ -2114,7 +2172,7 @@ fn PrintCase(case_stmt: CaseStmt_AST, cnfg: &str, indent: i32) -> bool {
                 print!("default ");
             },
             _ => {
-                DeconpAST(e,cnfg, indent + 1);
+                DeconpAST(false, e,cnfg, indent + 1);
             },
         }
         print!(" :");
@@ -2122,10 +2180,10 @@ fn PrintCase(case_stmt: CaseStmt_AST, cnfg: &str, indent: i32) -> bool {
         if n > 1 {print!("begin \n")}
         for y in ef {
             if n > 1 {
-                DeconpAST(y,cnfg, indent + 2);
+                DeconpAST(false, y,cnfg, indent + 2);
             }
             else {
-                DeconpAST(y,cnfg, 0);
+                DeconpAST(false, y,cnfg, 0);
             }
         }
         if n > 1 {
@@ -2153,13 +2211,15 @@ fn PrintFsm(Fsm: FsmModule) -> bool {
     let p = tmp.clone().StateOut();
     println!("    always@(posedge {} or posedge {}) begin", _StrOut(CLK.clone()), _StrOut(RST.clone()));
     println!("        if ({} == 1) begin \n            {} <= {}; \n        end",_StrOut(RST.clone()), _StrOut(Reg.clone()), _StrOut(tmp.clone().FirstState()));
-    println!("        else begin \n            {} <= {}_Next \n        end \n    end \n",_StrOut(Reg.clone()),_StrOut(Reg.clone()));
+    println!("        else begin \n            {} <= {}_Next; \n        end \n    end \n",_StrOut(Reg.clone()),_StrOut(Reg.clone()));
     println!("    always@(posedge {}) begin",_StrOut(CLK.clone()));
-    println!("        case({})",_StrOut(Reg.clone()));
+    println!("        if ({}) {}_Next <= {};\n", _StrOut(RST.clone()), _StrOut(Reg.clone()), _StrOut(tmp.clone().FirstState()));
+    println!("        else begin\n");
+    println!("            case({})",_StrOut(Reg.clone()));
     for st in p {
         PrintState(st.clone());
     }
-    println!("        endcase \n    end");
+    println!("            endcase \n        end\n    end\n");
 
 
 
@@ -2174,9 +2234,9 @@ fn PrintState(STMT: StateModule) -> bool {
     let stname = st.getStateName();
     let tmp = st.getBranch();
 
-    println!("            {} : begin",stname);
-    PrintIf(tmp.clone(), "Non", 3);
-    println!("            end");
+    println!("                {} : begin",stname);
+    PrintIf(tmp.clone(), "Non", 4);
+    println!("                end");
     return true;
 }
 
