@@ -238,5 +238,5 @@ Update history
 2017/11/18:  Add formula macro  
 2018/01/20:  Add FSM making method  
 2018/06/30:  Add Syntax decomposition and output function  
-2018/07/27:  Release first product on Github
+2018/07/27:  Release first product on Github  
 2018/09/15:  FSM function's bugfix 
