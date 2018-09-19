@@ -20,6 +20,9 @@ and it is open-source library for constructing a Verilog HDL source code in Rust
 VeRuGentはVerilog from Rust : Generation Toolkitsの略称です。  
 RustによるVerilogHDLコード構築用ライブラリです。  
 
+※英語としてはRust to Verilogの方が記法として良いのですが、略称を設定する過程でfromにしています。  
+　(ここの部分はあまり突っ込まないで…)
+
 VeRuGent does not synthesis of the source code.(Of course it does not do high-level synthesis)  
 This generates only Verilog code.    
 本ツールは論理合成は行いません。(高位合成も対象外です)  
