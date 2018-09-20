@@ -115,41 +115,45 @@ If you build and run this code, you can see the output verilog code as a result.
     module LED (
         input  CLK,
         input  RST,
-        input  BTN1,
-        input  BTN2,
-        output [7:0] LED
+        input  i_BTN1,
+        input  i_BTN2,
+        output [7:0] o_LED
     );
         localparam IDLE = 0;
         localparam RUN = 1;
         localparam END = 2;
         reg [31:0] State;
         reg [31:0] State_Next;
-        assign LED = (State==RUN)? 8: 0;
+        assign o_LED = (State==RUN)? 255: 0;
 
         always@(posedge CLK or posedge RST) begin
             if (RST == 1) begin
                 State <= IDLE;
             end
             else begin
-                State <= State_Next
+                State <= State_Next;
             end
         end
 
         always@(posedge CLK) begin
-            case(State)
-                IDLE : begin
-                    if(BTN1==1&&RST!=1)
+            if (RST) State_Next <= IDLE;
+            else begin
+                case(State)
+                    IDLE : begin
+                    if(i_BTN1==1&&RST!=1)
                         State_Next <= RUN;
-                end
-                RUN : begin
-                    if(BTN2==1)
+                    end
+                    RUN : begin
+                    if(i_BTN2==1)
                         State_Next <= END;
-                end
-                END : begin
-                    State_Next <= IDLE;
-                end
-            endcase
+                    end
+                    END : begin
+                        State_Next <= IDLE;
+                    end
+                endcase
+            end
         end
+
 
     endmodule
 ```
