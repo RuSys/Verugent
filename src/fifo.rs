@@ -39,5 +39,5 @@ pub fn fifo() {
                                          .Form(wcnt.clone().sst(wcnt.clone() + 1))),
                     If(rd & empty.clone().not(), Form(rcnt.clone().sst(rcnt.clone() + 1)))]
             ));
-    m.endmodule()
+    m.endmodule();
 }
