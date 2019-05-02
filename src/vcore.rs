@@ -378,7 +378,6 @@ impl VModule {
         // Function構文出力コード
         st += &PrintFunction(self.Function_AST.clone());
 
-		println!("\n    // ----Extra Component set----\n");
         st += "\n    // ----Extra Component set----\n\n";
 
         
@@ -393,7 +392,7 @@ impl VModule {
             let mut i = -1;
             for tmp in self.Axi.clone() {
                 i += 1;
-                PrintAXI(tmp.clone(), i);
+                st += &PrintAXI(tmp.clone(), i);
             }
         }
 
@@ -2341,6 +2340,8 @@ fn PrintIf(If_Stmt: Vec<IfStmt_AST>, cnfg: &str, indent: i32) -> String {
     let tmp = If_Stmt;
     let mut num = 0;
     let mut st = String::new();
+
+	let mut nonBranch  = false;
     
     for mut x in tmp {
         let n = x.getStatement();
@@ -2349,6 +2350,7 @@ fn PrintIf(If_Stmt: Vec<IfStmt_AST>, cnfg: &str, indent: i32) -> String {
             match e {
                 E::Null => {
                     num = 0;
+					nonBranch = true;
                 }
                 _ => {
                     for _ in 0..indent {
@@ -2357,7 +2359,7 @@ fn PrintIf(If_Stmt: Vec<IfStmt_AST>, cnfg: &str, indent: i32) -> String {
                     st += "if(";
                     num += 1;
                     st += &DeconpAST(false, x.getTerms(), "", 0);
-                    st += ")\n";
+                    st += ") beign\n";
                 }
             }
         }
@@ -2367,30 +2369,29 @@ fn PrintIf(If_Stmt: Vec<IfStmt_AST>, cnfg: &str, indent: i32) -> String {
             }
             st += "else if(";
             st += &DeconpAST(false, x.getTerms(), "",0);
-            st += ")\n";
+            st += ") begin\n";
         }
         else {
             for _ in 0..indent {
                 st += "    ";
             }
-            st += "else\n";
+            st += "else begin\n";
         }
 
-        if n.len() > 1 {
-            for _ in 0..indent {
-                st += "    ";
-            }
-            st += "begin\n";
-        }
+		if nonBranch {
+			for y in n.clone() {
+            	st += &DeconpAST(false, y,cnfg, indent);
+        	}
+			return st
+		}
         for y in n.clone() {
             st += &DeconpAST(false, y,cnfg, indent + 1);
         }
-        if n.len() > 1 {
-            for _ in 0..indent {
-                st += "    ";
-            }
-            st += "end\n";
+
+        for _ in 0..indent {
+            st += "    ";
         }
+        st += "end\n";
     }
     return st;
 }
@@ -2482,7 +2483,7 @@ fn PrintState(STMT: StateModule) -> String {
     let mut st = String::new();
 
     st += &format!("                {} : begin\n",stname);
-    st += &PrintIf(tmp.clone(), "Non", 4);
+    st += &PrintIf(tmp.clone(), "Non", 5);
     st += "                end\n";
 
     return st;
@@ -2491,15 +2492,16 @@ fn PrintState(STMT: StateModule) -> String {
 /// AXIインタフェース出力関数
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-fn PrintAXI(AXI_Sugar: AXI, num: i32) -> bool {
+fn PrintAXI(AXI_Sugar: AXI, num: i32) -> String {
     let tmp = AXI_Sugar.clone();
+	let mut st = String::new();
     match tmp {
-        AXI::Lite(x) => {PrintAXISL(x, num);}
+        AXI::Lite(x) => { st += &PrintAXISL(x, num);}
         AXI::Slave(_) => {unimplemented!();}
         AXI::Master(_) => {unimplemented!();}
         AXI::Stream(_) => {unimplemented!();}
     }
-    true
+    return st;
 }
 
 /// AXISLite構文出力関数--ほぼテンプレ
@@ -2525,8 +2527,8 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
         reg_addr_width += 1;
     }
 
-
-    st += &format!("    reg r_en{}:\n", count);
+	st += &format!("    // AXI Lite Slave port : Number {}\n", count);
+    st += &format!("    reg r_en{};\n", count);
     st += &format!("    wire w_wdata_en{};\n", count);
     st += &format!("    wire w_rdata_en{};\n\n", count);
 
@@ -2626,7 +2628,7 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
 	}
 
     st += &format!("                    default: r_rdata{} <= 32'hDEAD_DEAD;\n                endcase\n", count);
-    st += "            end\n        end\n    end\n";
+    st += "            end\n        end\n    end\n\n";
 
 	return st;
 }

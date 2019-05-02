@@ -1,5 +1,4 @@
-#![macro_use]
-extern crate verugent;
+
 use verugent::vcore::*;
 
 pub fn led(){
@@ -21,4 +20,5 @@ pub fn led(){
 
     m.Assign(led._e(_Branch(F!(fstate == run), _Num(255), _Num(0))));
     m.endmodule();
+	m.genPrint();
 }

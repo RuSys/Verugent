@@ -102,4 +102,5 @@ pub fn hill_climbing() {
     m.Assign(busy._e(F!(fstate != s_idle).land(F!(fstate != s_end))));
 
     m.endmodule();
+	m.genPrint();
 }

@@ -1,5 +1,4 @@
 
-extern crate verugent;
 use verugent::vcore::*;
 
 pub fn fifo() {
@@ -40,4 +39,5 @@ pub fn fifo() {
                     If(rd & empty.clone().not(), Form(rcnt.clone().sst(rcnt.clone() + 1)))]
             ));
     m.endmodule();
+    m.genPrint();
 }
