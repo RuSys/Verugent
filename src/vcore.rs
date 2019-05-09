@@ -2515,7 +2515,7 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
 	let reg_tmp = tmp.reg_array.clone();
 
     // address space
-    let mut addr_width = 1;
+    let mut addr_width = 0;
 
     // address width
     let reg_length = tmp.reg_array.len() as i32;
@@ -2558,13 +2558,13 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
         st += &format!("            r_{} <= 32'd0;\n", _StrOut(x));
 	}
     st += &format!("        end\n        else begin\n            if( w_wdata_en{} == 1'd1 ) begin\n", count);
-    st += &format!("                case ( w_waddr{}[{}:2] )\n", count, "32");
+    st += &format!("                case ( w_waddr{}[{}:2] )\n", count, reg_addr_width-1);
     
     // generate write register
     for x in reg_tmp.clone() {
         // Unpack
         let mut reg = x;
-        st += &format!("                    {}'h{:02} : begin\n", reg_addr_width, addr_width);
+        st += &format!("                    {}'h{:02X} : begin\n", reg_addr_width-2, addr_width);
         for addr_count in 0..4 {
             st += &format!("                        if ( w_wstrb{}[{}] == 1'b1 ) r_{} <= w_wdata{0}[{}:{}]\n",
 			    count, addr_count, _StrOut(reg.clone()), 8*(addr_count+1)-1, 8*addr_count);
@@ -2618,13 +2618,13 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
     st += &format!("            r_rdata{} <= 32'd0; \n        end\n", count);
     st += "        else begin\n";
     st += &format!("            if( w_rdata_en{} ) begin\n", count);
-    st += &format!("                case( w_wraddr[{}-1:2] )\n", reg_addr_width);
+    st += &format!("                case( w_wraddr[{}:2] )\n", reg_addr_width-1);
 
 	// 配列の生成
 	i = -1;
 	for x in reg_tmp.clone() {
 		i += 1;
-        st += &format!("                    {}'h{:02} : r_rdata{} <= {};\n", reg_addr_width, i, count, _StrOut(x.clone()));
+        st += &format!("                    {}'h{:02X} : r_rdata{} <= {};\n", reg_addr_width-2, i, count, _StrOut(x.clone()));
 	}
 
     st += &format!("                    default: r_rdata{} <= 32'hDEAD_DEAD;\n                endcase\n", count);
