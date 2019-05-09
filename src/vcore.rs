@@ -2359,7 +2359,7 @@ fn PrintIf(If_Stmt: Vec<IfStmt_AST>, cnfg: &str, indent: i32) -> String {
                     st += "if(";
                     num += 1;
                     st += &DeconpAST(false, x.getTerms(), "", 0);
-                    st += ") beign\n";
+                    st += ") begin\n";
                 }
             }
         }
