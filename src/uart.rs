@@ -1,5 +1,4 @@
-#![macro_use]
-extern crate verugent;
+
 use verugent::vcore::*;
 
 pub fn uart() {
@@ -111,5 +110,5 @@ pub fn uart() {
     );
     m.endmodule();
 
-
+	m.genPrint();
 }

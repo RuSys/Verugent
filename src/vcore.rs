@@ -1,5 +1,10 @@
-﻿use std::ops::*;
+﻿
+use std::ops::*;
 use std::string::String;
+use std::fs::File;
+use std::io::Write;
+
+use std::*;
 
 /** 
   * 構文生成マクロ
@@ -60,7 +65,66 @@ pub struct VModule {
     Assign_AST  : Vec<Assign>,
     Function_AST: Vec<Func_AST>,
     Fsm         : Vec<FsmModule>,
+    Axi         : Vec<AXI>,
+
+    // generate code
+    code        : String,
 }
+
+/*
+/// 入出力ポート、内部配線用Trait
+#[allow(dead_code)]
+#[allow(non_snake_case)]
+impl VModule{
+    /// input の追加
+    pub fn Input(&mut self, name: &str) -> Box<E> {
+        let mut tmp = wrVar::new();
+        tmp.Input(name, 1);
+        self.IO_Port.push(tmp.clone());
+        return _V(tmp);
+    }
+
+    /// inout の追加
+    pub fn Inout(&mut self, name: &str) -> Box<E> {
+        let mut tmp = wrVar::new();
+        tmp.Inout(name, 1);
+        self.IO_Port.push(tmp.clone());
+        return _V(tmp);
+    }
+
+    /// output の追加
+    pub fn Output(&mut self, name: &str) -> Box<E> {
+        let mut tmp = wrVar::new();
+        tmp.Output(name, 1);
+        self.IO_Port.push(tmp.clone());
+        return _V(tmp);
+    }
+
+    /// output(register) の追加
+    pub fn Reg_Output(&mut self, name: &str) -> Box<E> {
+        let mut tmp = wrVar::new();
+        tmp.OutputReg(name, 1);
+        self.IO_Port.push(tmp.clone());
+        return _V(tmp);
+    }
+
+    /// wire の追加
+    pub fn Wire(&mut self, name: &str) -> Box<E> {
+        let mut tmp = wrVar::new();
+        tmp.Wire(name, 1);
+        self.Local.push(tmp.clone());
+        return _V(tmp);
+    }
+
+    /// reg の追加
+    pub fn Reg(&mut self, name: &str) -> Box<E> {
+        let mut tmp = wrVar::new();
+        tmp.Reg(name, 1);
+        self.Local.push(tmp.clone());
+        return _V(tmp);
+    }
+}
+*/
 
 /// 入出力ポート、内部配線用Trait
 #[allow(non_snake_case)]
@@ -191,7 +255,17 @@ impl VModule {
     /// モジュールの生成
     #[allow(non_snake_case)]
     pub fn new(Name: &str) -> VModule {
-        VModule{Module_Name: Name.to_string(), IO_Port: Vec::new(), IO_Param: Vec::new(),Local: Vec::new(),Always_AST: Vec::new(),Assign_AST: Vec::new(), Function_AST: Vec::new(),Fsm: Vec::new()}
+        VModule{Module_Name: Name.to_string(), 
+            IO_Port: Vec::new(),
+            IO_Param: Vec::new(),
+            Local: Vec::new(),
+            Always_AST: Vec::new(),
+            Assign_AST: Vec::new(),
+            Function_AST: Vec::new(),
+            Fsm: Vec::new(),
+            Axi: Vec::new(),
+            
+            code: " ".to_string()}
     }
 
     /// パラメータの追加
@@ -254,7 +328,14 @@ impl VModule {
         let mut np = wrVar::new();
         let mut n = 0;
         for ss in &mut stmt {
-            self.Local.push(wrVar{name: ss.getStateName(), io_param: io_p::param_, width: 0, length: 0, reg_set: false, value: n, width_p: "_".to_string(), length_p: "_".to_string()});
+            self.Local.push(wrVar{name: ss.getStateName(), 
+                            io_param: io_p::param_, 
+                            width: 0, 
+                            length: 0, 
+                            reg_set: false, 
+                            value: n, 
+                            width_p: "_".to_string(), 
+                            length_p: "_".to_string()});
             n+=1;
         }
 
@@ -269,41 +350,172 @@ impl VModule {
         self.Fsm.push(tmp.clone());
 
         return tmp.StateReg();
-    }    
+    }
 
     /// モジュールの AST 解析と Verilog 構文の出力
     #[allow(dead_code)]
     #[allow(non_snake_case)]
-    pub fn endmodule(&mut self) {
-        print!("module {} ",self.getName());
+    pub fn endmodule(&mut self) -> String {
+        let mut st = String::new();
+        //print!("module {} ",self.getName());
+        st += &format!("module {} ",self.getName());
+        
         // 入出力パラメータ出力コード
-        PrintParam(self.IO_Param.clone());
+        st += &PrintParam(self.IO_Param.clone());
 
         // 入出力ポート出力コード
-        PrintPort(self.IO_Port.clone());
+        st += &PrintPort(self.IO_Port.clone());
 
         // 内部パラメータおよび内部配線出力コード
-        PrintLocal(self.Local.clone());
+        st += &PrintLocal(self.Local.clone());
 
         // Assign構文出力コード
-        PrintAssign(self.Assign_AST.clone());
+        st += &PrintAssign(self.Assign_AST.clone());
 
         // Always構文出力コード
-        PrintAlways(self.Always_AST.clone());
+        st += &PrintAlways(self.Always_AST.clone());
 
         // Function構文出力コード
-        PrintFunction(self.Function_AST.clone());
+        st += &PrintFunction(self.Function_AST.clone());
 
+        st += "\n    // ----Extra Component set----\n\n";
+
+        
         // FSMの出力コード
         if self.Fsm.clone().len() > 0 {
             for tmp in self.Fsm.clone() {
-                PrintFsm(tmp.clone());
+                st += &PrintFsm(tmp.clone());
+            }
+        }
+        
+        if self.Axi.clone().len() > 0 {
+            let mut i = -1;
+            for tmp in self.Axi.clone() {
+                i += 1;
+                st += &PrintAXI(tmp.clone(), i);
             }
         }
 
-        println!("\nendmodule");
+        st += "\nendmodule\n";
+        self.code = st.clone();
+
+        return st;
+    }
+
+    pub fn genPrint(&mut self) {
+        println!("{}",self.code);
+    }
+
+    pub fn genFile(&mut self, path: &str) -> Result<(),Box<std::error::Error>> {
+        let mut file = File::create(path)?;
+        write!(file, "{}", self.code)?;
+        file.flush()?;
+        Ok(())
     }
 }
+
+#[allow(non_snake_case)]
+#[allow(non_camel_case_types)]
+pub trait AXI_trait<T> {
+    fn AXI(&mut self, setAXI: T);
+}
+
+#[allow(non_snake_case)]
+#[allow(non_camel_case_types)]
+impl AXI_trait<AXISLite> for VModule {
+    fn AXI(&mut self, setAXI: AXISLite) {
+        let length = self.Axi.len() as i32;
+        
+        let reg_length = setAXI.reg_array.len() as i32;
+        let mut reg_addr_width: i32 = 1;
+
+        // address width calc
+        loop {
+            if 2i32.pow(reg_addr_width as u32) >= (reg_length * 4 - 1) {
+                break;
+            }
+            reg_addr_width += 1;
+        }
+
+        // read address channel
+        let mut o_arr = self.Output(&(format!("o_S_ARREADY{}", length.clone())), 0);
+        let     i_arv = self.Input(&(format!("i_S_ARVALID{}", length.clone())), 0);
+        let     i_ara = self.Input(&(format!("i_S_ARADDR{}", length.clone())), reg_addr_width);
+        self.Input(&(format!("i_S_ARPROT{}", length.clone())), 3);
+
+        // read data channel
+        let mut o_rda = self.Output(&(format!("o_S_RDATA{}", length.clone())), 32);
+        let mut o_rsp = self.Output(&(format!("o_S_RRESP{}", length.clone())), 2);
+        let mut o_rva = self.Output(&(format!("o_S_RVALID{}", length.clone())), 0);
+        let     i_rre = self.Input(&(format!("i_S_RREADY{}", length.clone())), 0);
+
+        // write address channel
+        let mut o_awr = self.Output(&(format!("o_S_AWREADY{}", length.clone())), 0);
+        let     i_awv = self.Input(&(format!("i_S_AWVALID{}", length.clone())), 0);
+                        self.Input(&(format!("i_S_AWADDR{}", length.clone())), reg_addr_width);
+                        self.Input(&(format!("i_S_AWPROT{}", length.clone())), 3);
+
+        // write data channel
+        let     i_wda = self.Input(&(format!("i_S_WDATA{}", length.clone())), 32);
+        let     i_wst = self.Input(&(format!("i_S_WSTRB{}", length.clone())), 4);
+        let     i_wva = self.Input(&(format!("i_S_WVALID{}", length.clone())), 0);
+        let mut o_wre = self.Output(&(format!("o_S_WREADY{}", length.clone())), 0);
+
+        // write response channel
+        let mut o_bre = self.Output(&(format!("o_S_BRESP{}", length.clone())), 2);
+        let mut o_bva = self.Output(&(format!("o_S_BVALID{}", length.clone())), 0);
+        let     i_bre = self.Input(&(format!("i_S_BREADY{}", length.clone())), 0);
+
+        // inner wire and register
+        let     r_arr = self.Reg(&(format!("r_arready{}", length.clone())), 0);
+        let mut w_arv = self.Wire(&(format!("w_arvalid{}", length.clone())), 0);
+        let mut w_ara = self.Wire(&(format!("w_araddr{}", length.clone())), reg_addr_width);
+
+        let     r_rda = self.Reg(&(format!("r_rdata{}", length.clone())), 32);
+        let     r_rsp = self.Reg(&(format!("r_rresp{}", length.clone())), 2);
+        let     r_rva = self.Reg(&(format!("r_rvalid{}", length.clone())), 0);
+        let mut w_rre = self.Wire(&(format!("w_rready{}", length.clone())), 0);
+
+        let     r_awr = self.Reg(&(format!("r_awready{}", length.clone())), 0);
+        let mut w_awv = self.Wire(&(format!("w_awvalid{}", length.clone())), 0);
+                        self.Reg(&(format!("r_awaddr{}", length.clone())), reg_addr_width);
+
+        let mut w_wda = self.Wire(&(format!("w_wdata{}", length.clone())), 32);
+        let mut w_wst = self.Wire(&(format!("r_wstrb{}", length.clone())), 4);
+        let mut w_wva = self.Wire(&(format!("w_wvalid{}", length.clone())), 0);
+        let     r_wre = self.Reg(&(format!("r_wready{}", length.clone())), 0);
+
+        let     r_bre = self.Reg(&(format!("r_bresp{}", length.clone())), 2);
+        let     r_bva = self.Reg(&(format!("r_bvalid{}", length.clone())), 0);
+        let mut w_bre = self.Wire(&(format!("w_bready{}", length.clone())), 0);
+
+        // 接続の追加
+        self.Assign(o_arr._e(r_arr));
+        self.Assign(w_arv._e(i_arv));
+        self.Assign(w_ara._e(i_ara));
+
+        self.Assign(o_rda._e(r_rda));
+        self.Assign(o_rsp._e(r_rsp));
+        self.Assign(o_rva._e(r_rva));
+        self.Assign(w_rre._e(i_rre));
+
+        self.Assign(o_awr._e(r_awr));
+        self.Assign(w_awv._e(i_awv));
+        //self.Assign(w_awa._e(i_awa));
+
+        self.Assign(w_wda._e(i_wda));
+        self.Assign(w_wst._e(i_wst));
+        self.Assign(w_wva._e(i_wva));
+        self.Assign(o_wre._e(r_wre));
+
+        self.Assign(o_bre._e(r_bre));
+        self.Assign(o_bva._e(r_bva));
+        self.Assign(w_bre._e(i_bre));
+
+        self.Axi.push(AXI::Lite(setAXI));
+    }
+}
+
 
 /// メモリレジスタ生成用のトレイト
 #[allow(non_snake_case)]
@@ -313,7 +525,7 @@ pub trait Memset<T> {
 }
 
 /// 入力(i32:Box<E>)生成するメモリ構文
-impl Memset<(i32, Box<E>)> for VModule{
+impl Memset<(i32, Box<E>)> for VModule {
     /// メモリ構文
     #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
@@ -1214,6 +1426,7 @@ pub enum E {
     Ldc(wrVar),                     // 変数
     Num(i32),                       // 数値
     No(Box<E>),                     // Not構文
+    Red(String, Box<E>),            // リダクション構文
     Bin(String, Box<E>, Box<E>),    // 二項演算
     PL(Box<E>, Box<E>, Box<E>),     // 分岐構文
     SB(Box<E>, Box<E>),             // 代入文
@@ -1756,346 +1969,379 @@ impl Addr<Box<E>> for Box<E>{
 /// 分解出力関数
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-fn DeconpAST(Parenthesis: bool, ast: Box<E>, cnfg: &str, indent: i32) {
+fn DeconpAST(Parenthesis: bool, ast: Box<E>, cnfg: &str, indent: i32) -> String{
     let e = *ast;
+    let mut st = String::new();
+
     match e {
         E::Bin(ref bin, ref l, ref r) => {
             let tmp = bin.as_str();
             for _ in 0..indent {
-                print!("    ");
+                st += "    ";
             }
             if Parenthesis {
                 match tmp.clone() {
-                    "add" => print!("("),
-                    "sub" => print!("("),
-                    "or" => print!("("),
-                    "lor" =>print!("("),
-                    _ => print!(""),
+                    "add" => {st += "("},
+                    "sub" => {st += "("},
+                    "or" => {st += "("},
+                    "lor" => {st += "("},
+                    _ => {st += ""},
                 }
             }
             let mut pareset = false;
-            DeconpAST(false ,l.clone(),cnfg, 0);
+            st += &DeconpAST(false ,l.clone(),cnfg, 0);
             match tmp.clone() {
-                "add" => print!("+"),
-                "sub" => print!("-"),
-                "mul" => {print!("*"); pareset = true},
-                "div" => {print!("/"); pareset = true},
-                "mod" => {print!("%"); pareset = true},
-                "or"  => print!("|"),
-                "and" => {print!("&"); pareset = true},
-                "lor"  => print!("||"),
-                "land" => {print!("&&"); pareset = true},
-                "lshift" => print!("<<"),
-                "rshift" => print!(">>"),
-                "equal" => print!("=="),
-                "Not equal" => print!("!="),
-                "more_than" => print!("<"),
-                "less_than" => print!(">"),
-                "or_more" => print!("<="),
-                "or_less" => print!(">="),
+                "add" => {st += "+"},
+                "sub" => {st += "-"},
+                "mul" => {st += "*"; pareset = true},
+                "div" => {st += "/"; pareset = true},
+                "mod" => {st += "%"; pareset = true},
+                "or"  => {st += "|"},
+                "and" => {st += "&"; pareset = true},
+                "lor"  => {st += "||"},
+                "land" => {st += "&&"; pareset = true},
+                "lshift" => {st += "<<"},
+                "rshift" => {st += ">>"},
+                "equal" => {st += "=="},
+                "Not equal" => {st += "!="},
+                "more_than" => {st += "<"},
+                "less_than" => {st += ">"},
+                "or_more" => {st += "<="},
+                "or_less" => {st += ">="},
                 _ => panic!("No correspond syntax"),
             }
-            DeconpAST(pareset, r.clone(),cnfg, 0);
+            st += &DeconpAST(pareset, r.clone(),cnfg, 0);
             if Parenthesis {
                 match tmp {
-                    "add" => print!(")"),
-                    "sub" => print!(")"),
-                    "or" => print!(")"),
-                    "lor" =>print!(")"),
-                    _ => print!(""),
+                    "add" => {st += ")"},
+                    "sub" => {st += ")"},
+                    "or" => {st += ")"},
+                    "lor" => {st += ")"},
+                    _ => {st += "";},
                 }
             }
         }
         E::Ldc(ref wr) => {
-            print!("{}",wr.getName());
-        },
+            st += &format!("{}",wr.getName());
+        }
         E::Num(ref i) => {
-            print!("{}",i);
-        },
+            st += &format!("{}",i);
+        }
         E::PL(ref d, ref t, ref f) => {
-            print!("(");
-            DeconpAST(false,d.clone(),cnfg, 0);
-            print!(")? ");
-            DeconpAST(false, t.clone(),cnfg, 0);
-            print!(": ");
-            DeconpAST(false, f.clone(),cnfg, 0);
-            print!("");
+            st += "(";
+            st += &DeconpAST(false,d.clone(),cnfg, 0);
+            st += ")? ";
+            st += &DeconpAST(false, t.clone(),cnfg, 0);
+            st += ": ";
+
+            st += &DeconpAST(false, f.clone(),cnfg, 0);
         },
         E::SB(ref l, ref r) => {
             for _ in 0..indent {
-                print!("    ");
+                st += "    ";
             }
-            DeconpAST(false, l.clone(),cnfg, indent);
+            st += &DeconpAST(false, l.clone(),cnfg, indent);
             if cnfg.to_string() == "brock".to_string() {
-                print!(" = ");
+                st += " = ";
             }
             else {
-                print!(" <= ");
+                st += " <= ";
             }
-            DeconpAST(false, r.clone(),cnfg, 0);
-            println!(";");
-        },
+            st += &DeconpAST(false, r.clone(),cnfg, 0);
+            st += ";\n";
+        }
         E::CS(ref c) => {
             let cn = &*c;
-            PrintCase(cn.clone(),cnfg, indent);
+            st += &PrintCase(cn.clone(),cnfg, indent);
         }
         E::BL(ref i) => {
             let iels = &*i;
-            PrintIf(iels.clone(),cnfg, indent);
+            st += &PrintIf(iels.clone(),cnfg, indent);
         }
         E::MEM(ref m, ref a) => {
             let ma = &*m;
             let aa = &*a;
-            DeconpAST(false, ma.clone(),cnfg, indent);
-            print!("[");
-            DeconpAST(false, aa.clone(),cnfg, 0);
-            print!("]");
+            st += &DeconpAST(false, ma.clone(),cnfg, indent);
+            st += &format!("[");
+            st += &DeconpAST(false, aa.clone(),cnfg, 0);
+            st += &format!("]");
         }
         E::No(ref b) => {
             let bb = &*b;
-            print!("~");
-            DeconpAST(false, bb.clone(),cnfg, 0);
+            st += "~";
+            st += &DeconpAST(false, bb.clone(),cnfg, 0);
+        }
+        E::Red(ref r, ref a) => {
+            let tmp = r.as_str();
+            match tmp.clone() {
+                "and" => {st += "&";},
+                "or"  => {st += "|"},
+                "xor" => {st += "^"},
+                "nand"=> {st += "~&"},
+                "nor" => {st += "~|"},
+                "xnor"=> {st += "~^"},
+				_ => {return st;},
+            }
+			st += &DeconpAST(false, a.clone(), cnfg, 0);
         }
         _ => {
-            return
+            st += "";
         }
     }
+    return st;
 }
 
 /// GlobalParameter出力関数
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-fn PrintParam(Param: Vec<wrVar>) -> bool {
+fn PrintParam(Param: Vec<wrVar>) -> String {
     let tmp = Param;
     let n = tmp.len();
     let mut num = 0;
+    let mut st = String::new();
     if n != 0 {
-        println!("#(");
+        st += "#(\n";
     }
 
     for x in tmp {
         num += 1;
-        print!("    parameter {} = {}",x.getName(), x.getValue());
+        st += &format!("    parameter {} = {}",x.getName(), x.getValue());
         if n > num {
-            println!(",");
+            st += ",\n";
         }
         else {
-            println!("");
+            st += "\n";
         }
     }
     if n != 0 {
-        println!(")");
+        st += ")\n";
     }
-    return true;
+    return st;
 }
 
 /// 入出力ポート出力関数
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-fn PrintPort(Port: Vec<wrVar>) -> bool {
+fn PrintPort(Port: Vec<wrVar>) -> String {
     let tmp = Port;
     let n = tmp.len();
     let mut num = 0;
-    println!("(");
+
+    let mut st = String::new();
+
+    st += "(\n";
+    //println!("(");
         for x in tmp {
             let port_set = x.getIO();
             num += 1;
             match port_set {
                 io_p::input_ => {
-                    print!("    input ");
+                    st += "    input ";
                 }
                 io_p::output_ => {
                     if x.getReg() {
-                        print!("    output reg ");
+                        st += "    output reg ";
                     }
                     else {
-                        print!("    output ");
+                        st += "    output ";
                     }
                 }
                 io_p::inout_ => {
-                    print!("    inout ")
+                    st += "    inout ";
                 }
-                _ => return false
+                _ => return st
             }
 
             if x.getWidth() == 0 && x.getWP() != "_" {
-                print!("[{}-1:0] ",x.getWP());
+                st += &format!("[{}-1:0] ",x.getWP());
             }
             else if x.getWidth() > 1 {
-                print!("[{}:0] ",x.getWidth()-1);
+                st += &format!("[{}:0] ",x.getWidth()-1);
             }
             else {
-                print!(" ");
+                st += " ";
             }
 
-            print!("{}",x.getName());
+            st += &format!("{}",x.getName());
 
             if x.getLength() == 0 && x.getLP() != "_" {
-                print!(" [{}-1:0]",x.getLP());
+                st += &format!(" [{}-1:0]",x.getLP());
             }
             else if x.getLength() != 0 {
-                print!(" [{}:0]",x.getLength()-1);
+                st += &format!(" [{}:0]",x.getLength()-1);
             }
             else {
-                print!("");
+                st += "";
             }
 
             if n > num {
-                println!(",");
+                st += ",\n";
             }
             else {
-                println!("");
+                st += "\n";
             }
         }
-        println!(");");
-        return true;
+        st += ");\n";
+        st
 }
 
 /// LocalParameter + Wire + Reg出力関数
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-fn PrintLocal(PWR: Vec<wrVar>) -> bool {
+fn PrintLocal(PWR: Vec<wrVar>) -> String {
+    let mut st = String::new();
+    st += "    // ----Generate local parts----\n\n";
     let tmp = PWR;
     for x in tmp {
         let port_set = x.getIO();
         match port_set {
             io_p::param_ => {
-                println!("    localparam {} = {};",x.getName(), x.getValue());
+                st += &format!("    localparam {} = {};\n",x.getName(), x.getValue());
             }
             io_p::none => {
                 if x.getReg() {
-                    print!("    reg ");
+                    st += "    reg ";
                 }
                 else {
-                    print!("    wire ");
+                    st += "    wire ";
                 }
                 if x.getWidth() == 0 && x.getWP() != "_".to_string() {
-                    print!("[{}-1:0] ",x.getWP());
+                    st += &format!("[{}-1:0] ",x.getWP());
                 }
                 else if x.getWidth() > 1 {
-                    print!("[{}:0] ",x.getWidth()-1);
+                    st += &format!("[{}:0] ",x.getWidth()-1);
                 }
                 else {
-                    print!(" ");
+                    st += " ";
                 }
 
-                print!("{}",x.getName());
+                st += &format!("{}",x.getName());
 
                 if x.getLength() == 0 && x.getLP() != "_".to_string() {
-                    print!(" [{}-1:0]",x.getLP());
+                    st += &format!(" [{}-1:0]",x.getLP());
                 }
                 else if x.getLength() != 0 {
-                    print!(" [{}:0]",x.getLength()-1);
+                    st += &format!(" [{}:0]",x.getLength()-1);
                 }
                 else {
-                    print!("");
+                    st += "";
                 }
-                print!(";\n");
+                st += ";\n";
             }
-            _ => return true
+            _ => return st
         }
     }
-    return true;
+    st
 }
 
 /// assign出力関数
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-fn PrintAssign(Assign: Vec<Assign>) -> bool {
+fn PrintAssign(Assign: Vec<Assign>) -> String {
+    let mut st = String::new();
+    st += "\n    // ----Generate assign compornent----\n\n";
     let tmp = Assign;
     for mut x in tmp {
         let LO = x.LOut();
-        print!("    assign ");
-        DeconpAST(false, LO, "", 0);
-        print!(" = ");
+        st += "    assign ";
+        st += &DeconpAST(false, LO, "", 0);
+        st += " = ";
         let port_set = x.ROut();
-        DeconpAST(false, port_set, "", 0);
-        println!(";");
+        st += &DeconpAST(false, port_set, "", 0);
+        st += ";\n";
     }
-    println!("");
-    return true
+    st += "\n";
+    st
 }
 
 /// always出力関数
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-fn PrintAlways(Always: Vec<Always>) -> bool {
+fn PrintAlways(Always: Vec<Always>) -> String {
+    let mut st = String::new();
+    st += "\n    // ----Generate Always block----\n\n";
     let tmp = Always.clone();
     for x in tmp {
-        print!("    always@(");
+        st += "    always@(";
         let mut n = x.P_edge.clone();
         let mut tmp_num = 1;
         let mut len = n.len();
         for y in n{
-            print!("posedge {}",y.getName());
+            st += &format!("posedge {}",y.getName());
             if len > tmp_num {
-                print!(" or ");
+                st += " or ";
             }
             tmp_num += 1;
         }
 
         n = x.N_edge.clone();
         len = n.len();
-        if tmp_num > 1 && len > 0 {print!(" or ")}
+        if tmp_num > 1 && len > 0 {st += " or "}
         tmp_num = 1;
         for y in n {
-            print!("negedge {}",y.getName());
+            st += &format!("negedge {}",y.getName());
             if len > tmp_num {
-                print!(" or ");
+                st += " or ";
             }
             tmp_num += 1;
         }
-        print!(") begin\n");
-        for st in x.stmt.clone() {
-            DeconpAST(false, st,&x.clone().blockout(), 2);
+        st += ") begin\n";
+        for s in x.stmt.clone() {
+            st += &DeconpAST(false, s,&x.clone().blockout(), 2);
         }
         
-        println!("    end")
+        st += "    end\n";
     }
-    return true
+    return st;
 }
 
 /// function出力関数
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-fn PrintFunction(Function: Vec<Func_AST>) -> bool {
+fn PrintFunction(Function: Vec<Func_AST>) -> String {
+    let mut st = String::new();
+    st += "\n    // ----Generate Function block----\n\n";
+
     let tmp = Function.clone();
     for x in tmp {
         let e = x.top;
         if let E::Ldc(wrtop) = (*e).clone() {
-            print!("\n    function [{}:0] ", wrtop.getWidth()-1);
-            DeconpAST(false, e, "", 1);
-            println!(";");
+            st += &format!("\n    function [{}:0] ", wrtop.getWidth()-1);
+            st += &DeconpAST(false, e, "", 1);
+            st += ";\n";
         }
         for inpt in x.input {
             let i = inpt.clone();
             if let E::Ldc(wr) = (*i).clone() {
                 if wr.getWidth() > 0 {
-                    print!("        input [{}:0]", wr.getWidth()-1);
-                    DeconpAST(false, i, "",2);
-                    println!(";");
+                    st += &format!("        input [{}:0]", wr.getWidth()-1);
+                    st += &DeconpAST(false, i, "",2);
+                    st += ";\n";
                 }
                 else {
-                    println!("        input ");
-                    DeconpAST(false, i, "", 2);
-                    println!(";");
+                    st += "        input \n";
+                    st += &DeconpAST(false, i, "", 2);
+                    st += ";\n";
                 }
             }
         }
-        for st in x.stmt {
-            DeconpAST(false, st, "", 2);
+        for s in x.stmt {
+            st += &DeconpAST(false, s, "", 2);
         }
-        println!("    endfunction\n");
+        st += "    endfunction\n\n";
     }
-    return true;
+    return st;
 }
 
 /// if_else構文出力関数--ブロック出力関数より呼び出し
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-fn PrintIf(If_Stmt: Vec<IfStmt_AST>, cnfg: &str, indent: i32) -> bool {
+fn PrintIf(If_Stmt: Vec<IfStmt_AST>, cnfg: &str, indent: i32) -> String {
     let tmp = If_Stmt;
     let mut num = 0;
+    let mut st = String::new();
+
+	let mut nonBranch  = false;
     
     for mut x in tmp {
         let n = x.getStatement();
@@ -2104,140 +2350,287 @@ fn PrintIf(If_Stmt: Vec<IfStmt_AST>, cnfg: &str, indent: i32) -> bool {
             match e {
                 E::Null => {
                     num = 0;
+					nonBranch = true;
                 }
                 _ => {
                     for _ in 0..indent {
-                        print!("    ");
+                        st += "    ";
                     }
-                    print!("if(");
+                    st += "if(";
                     num += 1;
-                    DeconpAST(false, x.getTerms(), "", 0);
-                    print!(")\n");
+                    st += &DeconpAST(false, x.getTerms(), "", 0);
+                    st += ") begin\n";
                 }
             }
         }
         else if x.getIfFlag() {
             for _ in 0..indent {
-                print!("    ");
+                st += "    ";
             }
-            print!("else if(");
-            DeconpAST(false, x.getTerms(), "",0);
-            print!(")\n");
+            st += "else if(";
+            st += &DeconpAST(false, x.getTerms(), "",0);
+            st += ") begin\n";
         }
         else {
             for _ in 0..indent {
-                print!("    ");
+                st += "    ";
             }
-            print!("else\n");
+            st += "else begin\n";
         }
 
-        if n.len() > 1 {
-            for _ in 0..indent {
-                print!("    ")
-            }
-            print!("begin\n")
-            }
+		if nonBranch {
+			for y in n.clone() {
+            	st += &DeconpAST(false, y,cnfg, indent);
+        	}
+			return st
+		}
         for y in n.clone() {
-            DeconpAST(false, y,cnfg, indent + 1);
+            st += &DeconpAST(false, y,cnfg, indent + 1);
         }
-        if n.len() > 1 {
-            for _ in 0..indent {
-                print!("    ")
-            }
-            print!("end\n")
-            }
+
+        for _ in 0..indent {
+            st += "    ";
+        }
+        st += "end\n";
     }
-    return true;
+    return st;
 }
 
 /// Case構文出力関数--ブロック出力関数より呼び出し
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-fn PrintCase(case_stmt: CaseStmt_AST, cnfg: &str, indent: i32) -> bool {
+fn PrintCase(case_stmt: CaseStmt_AST, cnfg: &str, indent: i32) -> String {
     let mut tmp = case_stmt;
     let ctmp = tmp.clone().Select;
+    let mut st = String::new();
     for _ in 0..indent {
-        print!("    ");
+        st += "    ";
     }
-    println!("case ({})",tmp.getCaseV().getName());
+    st += &format!("case ({})\n",tmp.getCaseV().getName());
     for x in ctmp {
         let e = x.CaseT.clone();
         let ef = x.CaseS.clone();
         let mut tm = *e.clone();
         for _ in 0..indent+1 {
-            print!("    ");
+            st += "    ";
         }
         match tm {
             E::Null => {
-                print!("default ");
+                st += "default ";
             },
             _ => {
-                DeconpAST(false, e,cnfg, indent + 1);
+                st += &DeconpAST(false, e,cnfg, indent + 1);
             },
         }
-        print!(" :");
+        st += " :";
         let n = ef.len();
-        if n > 1 {print!("begin \n")}
+        if n > 1 {st += "begin \n";}
         for y in ef {
             if n > 1 {
-                DeconpAST(false, y,cnfg, indent + 2);
+                st += &DeconpAST(false, y,cnfg, indent + 2);
             }
             else {
-                DeconpAST(false, y,cnfg, 0);
+                st += &DeconpAST(false, y,cnfg, 0);
             }
         }
         if n > 1 {
             for _ in 0..indent+1 {
-                print!("    ");
+                st += "    ";
             }
-            print!("end \n")
+            st += "end \n";
         }
     }
     for _ in 0..indent {
-        print!("    ");
+        st += "    ";
     }
-    println!("endcase");
-    return true;
+    st += "endcase\n";
+    return st;
 }
 
 /// Fsm構文出力関数--always文を生成する
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-fn PrintFsm(Fsm: FsmModule) -> bool {
+fn PrintFsm(Fsm: FsmModule) -> String {
+    let mut st = String::new(); 
     let tmp = Fsm.clone();
     let CLK = tmp.clone().StateClk();
     let RST = tmp.clone().StateRst();
     let Reg = tmp.clone().StateReg();
-    let p = tmp.clone().StateOut();
-    println!("    always@(posedge {} or posedge {}) begin", _StrOut(CLK.clone()), _StrOut(RST.clone()));
-    println!("        if ({} == 1) begin \n            {} <= {}; \n        end",_StrOut(RST.clone()), _StrOut(Reg.clone()), _StrOut(tmp.clone().FirstState()));
-    println!("        else begin \n            {} <= {}_Next; \n        end \n    end \n",_StrOut(Reg.clone()),_StrOut(Reg.clone()));
-    println!("    always@(posedge {}) begin",_StrOut(CLK.clone()));
-    println!("        if ({}) {}_Next <= {};\n", _StrOut(RST.clone()), _StrOut(Reg.clone()), _StrOut(tmp.clone().FirstState()));
-    println!("        else begin\n");
-    println!("            case({})",_StrOut(Reg.clone()));
-    for st in p {
-        PrintState(st.clone());
+    let p = tmp.clone().StateOut(); 
+    st += &format!("    always@(posedge {} or posedge {}) begin\n", _StrOut(CLK.clone()), _StrOut(RST.clone()));
+    st += &format!("        if ({} == 1) begin \n            {} <= {}; \n        end\n",_StrOut(RST.clone()), _StrOut(Reg.clone()), _StrOut(tmp.clone().FirstState()));
+    st += &format!("        else begin \n            {} <= {}_Next; \n        end \n    end \n\n",_StrOut(Reg.clone()),_StrOut(Reg.clone()));
+    st += &format!("    always@(posedge {}) begin\n",_StrOut(CLK.clone()));
+    st += &format!("        if ({}) {}_Next <= {};\n", _StrOut(RST.clone()), _StrOut(Reg.clone()), _StrOut(tmp.clone().FirstState()));
+    st += "        else begin\n";
+    st += &format!("            case({})\n",_StrOut(Reg.clone()));
+    for s in p {
+        st += &PrintState(s.clone());
     }
-    println!("            endcase \n        end\n    end\n");
+    st += "            endcase \n        end\n    end\n\n";
 
-
-
-    return true;
+    return st;
 }
 
 /// 1Stateモデル出力関数
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-fn PrintState(STMT: StateModule) -> bool {
-    let mut st = STMT;
-    let stname = st.getStateName();
-    let tmp = st.getBranch();
+fn PrintState(STMT: StateModule) -> String {
+    let mut s = STMT;
+    let stname = s.getStateName();
+    let tmp = s.getBranch();
 
-    println!("                {} : begin",stname);
-    PrintIf(tmp.clone(), "Non", 4);
-    println!("                end");
-    return true;
+    let mut st = String::new();
+
+    st += &format!("                {} : begin\n",stname);
+    st += &PrintIf(tmp.clone(), "Non", 5);
+    st += "                end\n";
+
+    return st;
+}
+
+/// AXIインタフェース出力関数
+#[allow(dead_code)]
+#[allow(non_snake_case)]
+fn PrintAXI(AXI_Sugar: AXI, num: i32) -> String {
+    let tmp = AXI_Sugar.clone();
+	let mut st = String::new();
+    match tmp {
+        AXI::Lite(x) => { st += &PrintAXISL(x, num);}
+        AXI::Slave(_) => {unimplemented!();}
+        AXI::Master(_) => {unimplemented!();}
+        AXI::Stream(_) => {unimplemented!();}
+    }
+    return st;
+}
+
+/// AXISLite構文出力関数--ほぼテンプレ
+#[allow(dead_code)]
+#[allow(non_snake_case)]
+fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
+	let tmp = AXISL.clone();
+    let mut st = String::new();
+
+    // register
+	let reg_tmp = tmp.reg_array.clone();
+
+    // address space
+    let mut addr_width = 0;
+
+    // address width
+    let reg_length = tmp.reg_array.len() as i32;
+    let mut reg_addr_width: i32 = 1;
+    loop {
+        if 2i32.pow(reg_addr_width as u32) >= (reg_length * 4 - 1) {
+            break;
+        }
+        reg_addr_width += 1;
+    }
+
+	st += &format!("    // AXI Lite Slave port : Number {}\n", count);
+    st += &format!("    reg r_en{};\n", count);
+    st += &format!("    wire w_wdata_en{};\n", count);
+    st += &format!("    wire w_rdata_en{};\n\n", count);
+
+    // wready - waddress generating
+    st += &format!("    always @( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
+    st += &format!("        if( {} ) begin\n", _StrOut(tmp.clone().rst));
+    st += &format!("            r_wready{} <= 1'b0;\n            r_awready{0} <= 1'b0;\n            r_en{0} <= 1'b1;\n            r_awaddr{0} <= 0;\n",count);
+    st += &format!("        end else begin\n");
+    st += &format!("            if( ~r_wready{} && w_awvalid{0} && w_wvalid{0} && r_en{0} ) begin\n", count);
+    st += &format!("                r_wready{0} <= 1'b1;\n            end else begin\n                r_wready{0} <= 1'b0;\n            end\n\n",count);
+    st += &format!("            if( ~r_awready{} && w_awvalid{0} && w_wvalid{0} && r_en{0} ) begin\n", count);
+    st += &format!("                r_awready{0} <= 1'b1;\n                r_en{0} <= 1'b0;\n                r_awaddr{0} <= i_S_AWADDR{0};\n", count);
+    st += &format!("            end else begin\n");
+    st += &format!("                if( w_bready{} && r_bvalid{0} ) begin\n", count);
+    st += &format!("                    r_en{} <= 1'b1;\n                end\n", count);
+    st += &format!("                r_awready{0} <= 1'b0;\n", count);
+    st += &format!("            end\n        end\n    end\n\n");
+
+    st += &format!("    assign w_wdata_en{} = r_awready{0} && r_wready{0} && w_awvalid{0} && w_wvalid{0};\n\n", count);
+    
+    // wdata generating
+    st += &format!("    always@( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
+    st += &format!("        if( {} ) begin\n", _StrOut(tmp.clone().rst));
+
+	for x in tmp.reg_array.clone() {
+		//println!("            r_{} <= 32'd0;", _StrOut(x));
+        st += &format!("            r_{} <= 32'd0;\n", _StrOut(x));
+	}
+    st += &format!("        end\n        else begin\n            if( w_wdata_en{} == 1'd1 ) begin\n", count);
+    st += &format!("                case ( w_waddr{}[{}:2] )\n", count, reg_addr_width-1);
+    
+    // generate write register
+    for x in reg_tmp.clone() {
+        // Unpack
+        let mut reg = x;
+        st += &format!("                    {}'h{:02X} : begin\n", reg_addr_width-2, addr_width);
+        for addr_count in 0..4 {
+            st += &format!("                        if ( w_wstrb{}[{}] == 1'b1 ) r_{} <= w_wdata{0}[{}:{}]\n",
+			    count, addr_count, _StrOut(reg.clone()), 8*(addr_count+1)-1, 8*addr_count);
+        }
+
+        addr_width += 1;
+        st += "                    end\n";
+    }
+    st += "                    default: begin\n";
+	for x in reg_tmp.clone() {
+        st += &format!("                        r_{} <= r_{}\n", 
+            _StrOut(x.clone()), _StrOut(x.clone()));
+	}
+    st += "                    end\n                endcase\n            end\n";
+
+	// Local write en
+	let write_tmp = tmp.wLocal_write.clone();
+	let mut i = -1;
+	for x in write_tmp.clone() {
+		i += 1;
+		if let E::Null = *(x.0.clone()) {continue;}
+        st += &format!("\n            if( {} ) begin \n", _StrOut(x.0));
+        st += &format!("                    r_{} <= {};\n",
+            _StrOut(reg_tmp[i as usize].clone()), _StrOut(x.1));
+        st += "            end\n";
+	}
+    st += "        end\n    end\n\n";
+
+    // wready - waddress generating
+    st += &format!("    always @( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
+    st += &format!("        if( {} ) begin\n", _StrOut(tmp.clone().rst));
+    st += &format!("            r_bvalid{} <= 1'b0;\n            r_bresp{0} <= 2'b0;\n",count);
+    st += &format!("            r_arready{} <= 1'b0;\n            r_araddr{0} <= 0;\n",count);
+    st += &format!("            r_rvalid{} <= 1'b0;\n            r_rresp{0} <= 2'b0;\n",count);
+    st += "        end else begin\n";
+    
+    st += &format!("            if( r_awready{} && w_awvalid{0} && ~r_bvalid{0} && r_wready{0} && w_wvalid{0} ) begin\n", count);
+    st += &format!("                r_bvalid{0} <= 1'b1;\n                r_bresp{0} <= 2'b1;\n            end else if( w_bready{0} && r_bvalid{0} ) begin\n                r_bvalid{0} <= 1'b;\n            end\n\n",count);
+
+    st += &format!("            if( ~r_arready{} && w_arvalid{0} ) begin\n", count);
+    st += &format!("                r_arready{0} <= 1'b1;\n                r_araddr{0} <= i_S_ARADDR{0};\n            end else begin\n                r_arready{0} <= 1'b0;\n            end\n", count);
+
+    st += &format!("            if( r_arready{} && w_arvalid{0} && r_rvarid{0} ) begin\n", count);
+    st += &format!("                r_rvarid{} <= 1'b1;\n                r_rresp{0} <= 2'b0;\n            end else if( r_rvalid{0} && w_rready{0} ) begin\n                r_rvalid{0} <= 1'b0;\n            end\n", count);
+    st += "        end\n    end\n\n";
+
+    // rdata generation
+    st += &format!("    assign w_rdata_en{} = r_arready{0} && w_arvalid{0} && r_rvalid{0};\n\n", count);
+    st += &format!("    always @( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
+    st += &format!("        if( {} ) begin\n", _StrOut(tmp.clone().rst));
+    st += &format!("            r_rdata{} <= 32'd0; \n        end\n", count);
+    st += "        else begin\n";
+    st += &format!("            if( w_rdata_en{} ) begin\n", count);
+    st += &format!("                case( w_wraddr[{}:2] )\n", reg_addr_width-1);
+
+	// 配列の生成
+	i = -1;
+	for x in reg_tmp.clone() {
+		i += 1;
+        st += &format!("                    {}'h{:02X} : r_rdata{} <= {};\n", reg_addr_width-2, i, count, _StrOut(x.clone()));
+	}
+
+    st += &format!("                    default: r_rdata{} <= 32'hDEAD_DEAD;\n                endcase\n", count);
+    st += "            end\n        end\n    end\n\n";
+
+	return st;
 }
 
 /// NONAST
@@ -2245,6 +2638,7 @@ fn PrintState(STMT: StateModule) -> bool {
 macro_rules! Blank {
     () => (Box::new(E::Null))
 }
+
 
 /// FSM生成関数
 #[allow(dead_code)]
@@ -2444,6 +2838,132 @@ impl StateModule {
         self.clone().Branch
     }
 }
+
+/// AXI wrapping enum
+#[derive(Debug,Clone)]
+#[allow(dead_code)]
+enum AXI {
+    Lite(AXISLite),
+    Slave(AXIS),
+    Master(AXIM),
+    Stream(AXIST),
+}
+
+/// AXI Stream インタフェースの作成 - 未実装
+#[derive(Debug,Clone)]
+#[allow(non_snake_case)]
+pub struct AXIST;
+
+/// AXI Master インタフェースの作成 - 未実装
+#[derive(Debug,Clone)]
+#[allow(non_snake_case)]
+pub struct AXIM;
+
+/// AXI Slave インタフェースの作成 - 未実装
+#[derive(Debug,Clone)]
+#[allow(non_snake_case)]
+pub struct AXIS;
+
+/// AXI Slave Lite インタフェースの作成
+#[derive(Debug,Clone)]
+#[allow(non_snake_case)]
+pub struct AXISLite {
+	clk: Box<E>,
+	rst: Box<E>,
+	reg_array: Vec<Box<E>>,
+    wLocal_write: Vec<(Box<E>, Box<E>)>,
+	current_reg: i32,
+}
+
+/// AXI Slave Lite インターフェース生成
+#[allow(dead_code)]
+#[allow(non_snake_case)]
+pub fn AXIS_Lite_new(clock: Box<E>, reset: Box<E>) -> AXISLite {
+	AXISLite{
+		clk: clock,
+		rst: reset,
+		reg_array: Vec::new(),
+		wLocal_write: Vec::new(),
+		current_reg: 0
+	}
+}
+
+/// AXI IFのレジスタ設定トレイト
+#[allow(non_camel_case_types)]
+#[allow(non_snake_case)]
+pub trait AXI_S_IF_Set<T> {
+	// 数だけ指定してレジスタを生成
+	fn OrderRegSet(&mut self, num: i32) -> T;
+
+	// レジスタ名を指定してスタック式にレジスタを追加
+	fn NamedRegSet(&mut self, name: &str) -> T;
+
+	// レジスタ番号によるアクセスメソッド
+	fn OrderReg(&mut self, num: i32) -> Box<E>;
+
+	// 対応レジスタへのアクセスメソッド
+	fn NamedReg(&mut self, name: &str) -> Box<E>;
+}
+
+/// ローカルからのレジスタ制御設定トレイト
+#[allow(non_camel_case_types)]
+#[allow(non_snake_case)]
+pub trait AXI_S_IF_LocalWrite<T> {
+    fn RegWrite(&mut self, write_en: Box<E>, write_data: T);
+}
+
+impl AXI_S_IF_Set<AXISLite> for AXISLite {
+	#[allow(non_snake_case)]
+	fn OrderRegSet(&mut self, num: i32) -> AXISLite {
+		for x in 0..num {
+			let Regname = format!("{}{}", "slv_reg".to_string(), x.to_string());
+			let reg = wrVar::new().Reg(&Regname, 32);
+			self.reg_array.push(reg);
+			self.wLocal_write.push((Box::new(E::Null), Box::new(E::Null)));
+		}
+		self.current_reg = num-1;
+		self.clone()
+	}
+
+	#[allow(non_snake_case)]
+	fn NamedRegSet(&mut self, name: &str) -> AXISLite {
+		let reg = wrVar::new().Reg(name, 32);
+		self.reg_array.push(reg);
+		self.wLocal_write.push((Box::new(E::Null), Box::new(E::Null)));
+		self.current_reg = self.reg_array.len() as i32 - 1;
+		self.clone()
+	}
+
+	#[allow(non_snake_case)]
+	fn OrderReg(&mut self, num: i32) -> Box<E> {
+		let SelfReg = self.reg_array.clone();
+		return SelfReg[num as usize].clone();
+	}
+
+	#[allow(non_snake_case)]
+	fn NamedReg(&mut self, name: &str) -> Box<E> {
+		let SelfReg = self.reg_array.clone();
+		for mut x in SelfReg {
+			let Nx = *x.clone();
+			if let E::Ldc(i) = Nx {
+				if i.getName() == name.to_string() {
+					return x
+				}
+			}
+		}
+		return Box::new(E::Null)
+	}
+}
+
+/// AXIS Lite ローカル側データ書き込み処理設定
+impl AXI_S_IF_LocalWrite<Box<E>> for AXISLite {
+    fn RegWrite(&mut self, write_en: Box<E>, write_data: Box<E>) {
+		// localwrite AXI Register
+		self.wLocal_write[self.current_reg.clone() as usize] = (write_en, write_data);
+		return;
+	}
+}
+
 
 // 基本Box<E>の分解に使用
 
