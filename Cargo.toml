@@ -3,4 +3,8 @@ name = "verugent"
 version = "0.1.0"
 authors = ["Mercye"]
 
-[dependencies]
+license = "MIT"
+description = "Rust to Verilog: Hardware Discription DSL library."
+repository = "https://github.com/RuSys/Verugent"
+readme = "README.md"
+keywords = ["verilog", "rust-verilog", verugent]
