@@ -70,8 +70,8 @@ use Verugent::core::*;
 　その後、cargo.tomlファイルに以下の記述を付け加えてください。  
 
 ```text
-[dependencies.varugent]  
-git = "https://github.com/RuSys/Verugent.git"  
+[dependencies]  
+Verugent = "0.1.1"
 ```
 
 **2. Declare the use of the core and macro within the block to be used.**  
