@@ -3,7 +3,7 @@ name = "verugent"
 version = "0.1.0"
 authors = ["Mercye"]
 
-license = "MIT"
+license = "Apache"
 description = "Rust to Verilog: Hardware Discription DSL library."
 repository = "https://github.com/RuSys/Verugent"
 readme = "README.md"
