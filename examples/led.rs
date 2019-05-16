@@ -1,7 +1,13 @@
+#[macro_use]
+extern crate verugent;
 
 use verugent::vcore::*;
 
-pub fn led(){
+fn main() {
+    led();
+}
+
+fn led() {
     let mut m = VModule::new("LED");
 
     let clk  = m.Input("CLK", 1);

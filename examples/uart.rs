@@ -1,7 +1,13 @@
+#[macro_use]
+extern crate verugent;
 
 use verugent::vcore::*;
 
-pub fn uart() {
+fn main() {
+    uart();
+}
+
+fn uart() {
     let mut m = VModule::new("UART");
 
     let rst = m.Input("RST", 1);
