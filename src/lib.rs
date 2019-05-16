@@ -1,8 +1,12 @@
 #[cfg(test)]
 mod tests {
+    use vcore::*;
     #[test]
     fn it_works() {
-        assert_eq!(2 + 2, 4);
+        let mut m = VModule::new("LED");
+        m.Input("CLK", 1);
+        m.Input("RST", 1);
+        assert!(m.endmodule().len() >= 0, "Code not generated successfully...");
     }
 }
 

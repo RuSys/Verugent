@@ -1,0 +1,18 @@
+language: rust
+
+os:
+  - windows
+
+rust:
+  - stable
+  - beta
+  - nightly
+
+  
+matrix:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+
+script:
+  - cargo test

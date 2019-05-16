@@ -4,6 +4,11 @@
 The tool is a DSL library for building Verilog's AST using the Rust programming language.  
 Rustプログラミング言語によるVerilogHDLコード構築DSLライブラリです  
 
+[![Build Status](https://travis-ci.org/RuSys/Verugent.svg?branch=master)](https://travis-ci.org/RuSys/Verugent)
+[![Crates.io](https://img.shields.io/crates/v/verugent.svg)](https://crates.io/crates/verugent)
+
+[![Docs.rs](https://docs.rs/verugent/badge.svg)](https://docs.rs/verugent)  
+
 Copyright (C) 2019, K.Takano    
 
 License
