@@ -1,7 +1,13 @@
+#[macro_use]
+extern crate verugent;
 
 use verugent::vcore::*;
 
-pub fn hill_climbing() {
+fn main() {
+    hill_climbing();
+}
+
+fn hill_climbing() {
     let mut m = VModule::new("Hill_climbing");
 
     let clk = m.Input("CLK", 1);

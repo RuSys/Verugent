@@ -1,7 +1,12 @@
+extern crate verugent;
 
 use verugent::vcore::*;
 
-pub fn fifo() {
+fn main() {
+    fifo();
+}
+
+fn fifo() {
     let mut m = VModule::new("FIFO");
     let width = m.Param("width", 8);
     let widthad = m.Param("widthad", 9);
