@@ -137,113 +137,75 @@ pub trait Vset<T> {
     fn Reg(&mut self, name: &str, Width: T) -> Box<E>;
 }
 
-/// 入力幅：i32
-#[allow(dead_code)]
-#[allow(non_snake_case)]
-impl Vset<i32> for VModule{
-    /// input の追加
-    fn Input(&mut self, name: &str, Width: i32) -> Box<E> {
-        let mut tmp = wrVar::new();
-        tmp.Input(name, Width);
-        self.IO_Port.push(tmp.clone());
-        return _V(tmp);
-    }
-
-    /// inout の追加
-    fn Inout(&mut self, name: &str, Width: i32) -> Box<E> {
-        let mut tmp = wrVar::new();
-        tmp.Inout(name, Width);
-        self.IO_Port.push(tmp.clone());
-        return _V(tmp);
-    }
-
-    /// output の追加
-    fn Output(&mut self, name: &str, Width: i32) -> Box<E> {
-        let mut tmp = wrVar::new();
-        tmp.Output(name, Width);
-        self.IO_Port.push(tmp.clone());
-        return _V(tmp);
-    }
-
-    /// output(register) の追加
-    fn Reg_Output(&mut self, name: &str, Width: i32) -> Box<E> {
-        let mut tmp = wrVar::new();
-        tmp.OutputReg(name, Width);
-        self.IO_Port.push(tmp.clone());
-        return _V(tmp);
-    }
-
-    /// wire の追加
-    fn Wire(&mut self, name: &str, Width: i32) -> Box<E> {
-        let mut tmp = wrVar::new();
-        tmp.Wire(name, Width);
-        self.Local.push(tmp.clone());
-        return _V(tmp);
-    }
-
-    /// reg の追加
-    fn Reg(&mut self, name: &str, Width: i32) -> Box<E> {
-        let mut tmp = wrVar::new();
-        tmp.Reg(name, Width);
-        self.Local.push(tmp.clone());
-        return _V(tmp);
-    }
-}
-
 /// 入力幅：Box<E>
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-impl Vset<Box<E>> for VModule{
+impl<T> Vset<T> for VModule
+where
+    T: Into<Box<E>>,
+{
     /// input の追加
-    fn Input(&mut self, name: &str, Width: Box<E>) -> Box<E> {
+    fn Input(&mut self, name: &str, Width: T) -> Box<E> {
         let mut tmp = wrVar::new();
-        tmp.Input(name, 0);
-        if let E::Ldc(wr) = *Width { tmp.Width( &( wr.getWP() ) ); };
+        let width = *Width.into();
+        let len = if let E::Num(i) = width { i } else { 0 };
+        tmp.Input(name, len);
+        if let E::Ldc(wr) = width { tmp.Width( &( wr.getWP() ) ); };
         self.IO_Port.push(tmp.clone());
         return _V(tmp);
     }
 
     /// inout の追加
-    fn Inout(&mut self, name: &str, Width: Box<E>) -> Box<E> {
+    fn Inout(&mut self, name: &str, Width: T) -> Box<E> {
         let mut tmp = wrVar::new();
-        tmp.Inout(name, 0);
-        if let E::Ldc(wr) = *Width { tmp.Width( &( wr.getWP() ) ); };
+        let width = *Width.into();
+        let len = if let E::Num(i) = width { i } else { 0 };
+        tmp.Inout(name, len);
+        if let E::Ldc(wr) = width { tmp.Width( &( wr.getWP() ) ); };
         self.IO_Port.push(tmp.clone());
         return _V(tmp);
     }
 
     /// output の追加
-    fn Output(&mut self, name: &str, Width: Box<E>) -> Box<E> {
+    fn Output(&mut self, name: &str, Width: T) -> Box<E> {
         let mut tmp = wrVar::new();
-        tmp.Output(name, 0);
-        if let E::Ldc(wr) = *Width { tmp.Width( &( wr.getWP() ) ); };
+        let width = *Width.into();
+        let len = if let E::Num(i) = width { i } else { 0 };
+        tmp.Output(name, len);
+        if let E::Ldc(wr) = width { tmp.Width( &( wr.getWP() ) ); };
         self.IO_Port.push(tmp.clone());
         return _V(tmp);
     }
 
     /// output(register) の追加
-    fn Reg_Output(&mut self, name: &str, Width: Box<E>) -> Box<E> {
+    fn Reg_Output(&mut self, name: &str, Width: T) -> Box<E> {
         let mut tmp = wrVar::new();
-        tmp.OutputReg(name, 0);
-        if let E::Ldc(wr) = *Width { tmp.Width( &( wr.getWP() ) ); };
+        let width = *Width.into();
+        let len = if let E::Num(i) = width { i } else { 0 };
+        tmp.OutputReg(name, len);
+        if let E::Ldc(wr) = width { tmp.Width( &( wr.getWP() ) ); };
         self.IO_Port.push(tmp.clone());
         return _V(tmp);
     }
 
     /// wire の追加
-    fn Wire(&mut self, name: &str, Width: Box<E>) -> Box<E> {
+    fn Wire(&mut self, name: &str, Width: T) -> Box<E> {
         let mut tmp = wrVar::new();
-        tmp.Wire(name, 0);
-        if let E::Ldc(wr) = *Width { tmp.Width( &( wr.getWP() ) ); };
+        let width = *Width.into();
+        let len = if let E::Num(i) = width { i } else { 0 };
+        tmp.Wire(name, len);
+        if let E::Ldc(wr) = width { tmp.Width( &( wr.getWP() ) ); };
         self.Local.push(tmp.clone());
         return _V(tmp);
     }
 
     /// reg の追加
-    fn Reg(&mut self, name: &str, Width: Box<E>) -> Box<E> {
+    fn Reg(&mut self, name: &str, Width: T) -> Box<E> {
         let mut tmp = wrVar::new();
-        tmp.Reg(name, 0);
-        if let E::Ldc(wr) = *Width { tmp.Width( &( wr.getWP() ) ); };
+        let width = *Width.into();
+        let len = if let E::Num(i) = width { i } else { 0 };
+        tmp.Reg(name, len);
+        if let E::Ldc(wr) = width { tmp.Width( &( wr.getWP() ) ); };
         self.Local.push(tmp.clone());
         return _V(tmp);
     }
@@ -438,56 +400,56 @@ impl AXI_trait<AXISLite> for VModule {
         }
 
         // read address channel
-        let mut o_arr = self.Output(&(format!("o_S_ARREADY{}", length.clone())), 0);
-        let     i_arv = self.Input(&(format!("i_S_ARVALID{}", length.clone())), 0);
-        let     i_ara = self.Input(&(format!("i_S_ARADDR{}", length.clone())), reg_addr_width);
+        let o_arr = self.Output(&(format!("o_S_ARREADY{}", length.clone())), 0);
+        let i_arv = self.Input(&(format!("i_S_ARVALID{}", length.clone())), 0);
+        let i_ara = self.Input(&(format!("i_S_ARADDR{}", length.clone())), reg_addr_width);
         self.Input(&(format!("i_S_ARPROT{}", length.clone())), 3);
 
         // read data channel
-        let mut o_rda = self.Output(&(format!("o_S_RDATA{}", length.clone())), 32);
-        let mut o_rsp = self.Output(&(format!("o_S_RRESP{}", length.clone())), 2);
-        let mut o_rva = self.Output(&(format!("o_S_RVALID{}", length.clone())), 0);
-        let     i_rre = self.Input(&(format!("i_S_RREADY{}", length.clone())), 0);
+        let o_rda = self.Output(&(format!("o_S_RDATA{}", length.clone())), 32);
+        let o_rsp = self.Output(&(format!("o_S_RRESP{}", length.clone())), 2);
+        let o_rva = self.Output(&(format!("o_S_RVALID{}", length.clone())), 0);
+        let i_rre = self.Input(&(format!("i_S_RREADY{}", length.clone())), 0);
 
         // write address channel
-        let mut o_awr = self.Output(&(format!("o_S_AWREADY{}", length.clone())), 0);
-        let     i_awv = self.Input(&(format!("i_S_AWVALID{}", length.clone())), 0);
-                        self.Input(&(format!("i_S_AWADDR{}", length.clone())), reg_addr_width);
-                        self.Input(&(format!("i_S_AWPROT{}", length.clone())), 3);
+        let o_awr = self.Output(&(format!("o_S_AWREADY{}", length.clone())), 0);
+        let i_awv = self.Input(&(format!("i_S_AWVALID{}", length.clone())), 0);
+                    self.Input(&(format!("i_S_AWADDR{}", length.clone())), reg_addr_width);
+                    self.Input(&(format!("i_S_AWPROT{}", length.clone())), 3);
 
         // write data channel
-        let     i_wda = self.Input(&(format!("i_S_WDATA{}", length.clone())), 32);
-        let     i_wst = self.Input(&(format!("i_S_WSTRB{}", length.clone())), 4);
-        let     i_wva = self.Input(&(format!("i_S_WVALID{}", length.clone())), 0);
-        let mut o_wre = self.Output(&(format!("o_S_WREADY{}", length.clone())), 0);
+        let i_wda = self.Input(&(format!("i_S_WDATA{}", length.clone())), 32);
+        let i_wst = self.Input(&(format!("i_S_WSTRB{}", length.clone())), 4);
+        let i_wva = self.Input(&(format!("i_S_WVALID{}", length.clone())), 0);
+        let o_wre = self.Output(&(format!("o_S_WREADY{}", length.clone())), 0);
 
         // write response channel
-        let mut o_bre = self.Output(&(format!("o_S_BRESP{}", length.clone())), 2);
-        let mut o_bva = self.Output(&(format!("o_S_BVALID{}", length.clone())), 0);
-        let     i_bre = self.Input(&(format!("i_S_BREADY{}", length.clone())), 0);
+        let o_bre = self.Output(&(format!("o_S_BRESP{}", length.clone())), 2);
+        let o_bva = self.Output(&(format!("o_S_BVALID{}", length.clone())), 0);
+        let i_bre = self.Input(&(format!("i_S_BREADY{}", length.clone())), 0);
 
         // inner wire and register
-        let     r_arr = self.Reg(&(format!("r_arready{}", length.clone())), 0);
-        let mut w_arv = self.Wire(&(format!("w_arvalid{}", length.clone())), 0);
-        let mut w_ara = self.Wire(&(format!("w_araddr{}", length.clone())), reg_addr_width);
+        let r_arr = self.Reg(&(format!("r_arready{}", length.clone())), 0);
+        let w_arv = self.Wire(&(format!("w_arvalid{}", length.clone())), 0);
+        let w_ara = self.Wire(&(format!("w_araddr{}", length.clone())), reg_addr_width);
 
-        let     r_rda = self.Reg(&(format!("r_rdata{}", length.clone())), 32);
-        let     r_rsp = self.Reg(&(format!("r_rresp{}", length.clone())), 2);
-        let     r_rva = self.Reg(&(format!("r_rvalid{}", length.clone())), 0);
-        let mut w_rre = self.Wire(&(format!("w_rready{}", length.clone())), 0);
+        let r_rda = self.Reg(&(format!("r_rdata{}", length.clone())), 32);
+        let r_rsp = self.Reg(&(format!("r_rresp{}", length.clone())), 2);
+        let r_rva = self.Reg(&(format!("r_rvalid{}", length.clone())), 0);
+        let w_rre = self.Wire(&(format!("w_rready{}", length.clone())), 0);
 
-        let     r_awr = self.Reg(&(format!("r_awready{}", length.clone())), 0);
-        let mut w_awv = self.Wire(&(format!("w_awvalid{}", length.clone())), 0);
-                        self.Reg(&(format!("r_awaddr{}", length.clone())), reg_addr_width);
+        let r_awr = self.Reg(&(format!("r_awready{}", length.clone())), 0);
+        let w_awv = self.Wire(&(format!("w_awvalid{}", length.clone())), 0);
+                    self.Reg(&(format!("r_awaddr{}", length.clone())), reg_addr_width);
 
-        let mut w_wda = self.Wire(&(format!("w_wdata{}", length.clone())), 32);
-        let mut w_wst = self.Wire(&(format!("r_wstrb{}", length.clone())), 4);
-        let mut w_wva = self.Wire(&(format!("w_wvalid{}", length.clone())), 0);
-        let     r_wre = self.Reg(&(format!("r_wready{}", length.clone())), 0);
+        let w_wda = self.Wire(&(format!("w_wdata{}", length.clone())), 32);
+        let w_wst = self.Wire(&(format!("r_wstrb{}", length.clone())), 4);
+        let w_wva = self.Wire(&(format!("w_wvalid{}", length.clone())), 0);
+        let r_wre = self.Reg(&(format!("r_wready{}", length.clone())), 0);
 
-        let     r_bre = self.Reg(&(format!("r_bresp{}", length.clone())), 2);
-        let     r_bva = self.Reg(&(format!("r_bvalid{}", length.clone())), 0);
-        let mut w_bre = self.Wire(&(format!("w_bready{}", length.clone())), 0);
+        let r_bre = self.Reg(&(format!("r_bresp{}", length.clone())), 2);
+        let r_bva = self.Reg(&(format!("r_bvalid{}", length.clone())), 0);
+        let w_bre = self.Wire(&(format!("w_bready{}", length.clone())), 0);
 
         // 接続の追加
         self.Assign(o_arr._e(r_arr));
@@ -524,57 +486,20 @@ pub trait Memset<T> {
     fn Mem(&mut self, name: &str, args: T) -> Box<E>;
 }
 
-/// 入力(i32:Box<E>)生成するメモリ構文
-impl Memset<(i32, Box<E>)> for VModule {
-    /// メモリ構文
-    #[allow(non_snake_case)]
-    #[allow(non_camel_case_types)]
-    fn Mem(&mut self, name: &str, args: (i32, Box<E>)) -> Box<E> {
-        let mut tmp = wrVar::new();
-        tmp.Mem(name, args.0, 0);
-        if let E::Ldc(wr) = *args.1 { tmp.Length( &( wr.getName() ) ); };
-        self.Local.push(tmp.clone());
-        return _V(tmp);
-    }
-}
-
-/// 入力(Box<E>:i32)生成するメモリ構文
-impl Memset<(Box<E>, i32)> for VModule{
-    /// メモリ構文
-    #[allow(non_snake_case)]
-    #[allow(non_camel_case_types)]
-    fn Mem(&mut self, name: &str, args: (Box<E>, i32)) -> Box<E> {
-        let mut tmp = wrVar::new();
-        tmp.Mem(name, 0, args.1);
-        if let E::Ldc(wr) = *args.0 { tmp.Width( &( wr.getName() ) ); };
-        self.Local.push(tmp.clone());
-        return _V(tmp);
-    }
-}
-
-/// 入力(i32:i32)生成するメモリ構文
-impl Memset<(i32, i32)> for VModule{
-    /// メモリ構文
-    #[allow(non_snake_case)]
-    #[allow(non_camel_case_types)]
-    fn Mem(&mut self, name: &str, args: (i32, i32)) -> Box<E> {
-        let mut tmp = wrVar::new();
-        tmp.Mem(name, args.0, args.1);
-        self.Local.push(tmp.clone());
-        return _V(tmp);
-    }
-}
-
 /// 入力(Box<E>:Box<E>)生成するメモリ構文
-impl Memset<(Box<E>, Box<E>)> for VModule{
+impl<T, U> Memset<(T, U)> for VModule
+where
+    T: Into<Box<E>>,
+    U: Into<Box<E>>,
+{
     /// メモリ構文
     #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
-    fn Mem(&mut self, name: &str, args: (Box<E>, Box<E>)) -> Box<E> {
+    fn Mem(&mut self, name: &str, args: (T, U)) -> Box<E> {
         let mut tmp = wrVar::new();
         tmp.Mem(name, 0, 0);
-        if let E::Ldc(wr) = *args.0 { tmp.Width( &( wr.getName() ) ); };
-        if let E::Ldc(wr) = *args.1 { tmp.Length( &( wr.getName() ) ); };
+        if let E::Ldc(wr) = *args.0.into() { tmp.Width( &( wr.getName() ) ); };
+        if let E::Ldc(wr) = *args.1.into() { tmp.Length( &( wr.getName() ) ); };
         self.Local.push(tmp.clone());
         return _V(tmp);
     }
@@ -770,25 +695,31 @@ impl wrVar {
 
 /// Assign 構文代入用トレイト
 #[allow(non_snake_case)]
-pub trait SetEqual {
-     fn _e(&mut self, RHS: Box<E>) -> Assign;
+pub trait SetEqual<T>
+where
+    T: Into<Box<E>>,
+{
+     fn _e(&self, RHS: T) -> Assign;
 
-     fn _ve(&mut self, RHS: Box<E>) -> Assign;
+     fn _ve(&self, RHS: T) -> Assign;
 }
 
 /// Assign 構文代入用トレイト
-impl SetEqual for Box<E> {
+impl<T> SetEqual<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
     /// Box<E>からAssign生成を行うメソッド
     #[allow(non_snake_case)]
-    fn _e(&mut self, RHS: Box<E>) -> Assign {
+    fn _e(&self, RHS: T) -> Assign {
         let mut tmp = Assign::new();
-        tmp.L(self.clone()).R(RHS)
+        tmp.L(self).R(&RHS.into())
     }
 
     #[allow(non_snake_case)]
-    fn _ve(&mut self, RHS: Box<E>) -> Assign {
+    fn _ve(&self, RHS: T) -> Assign {
         let mut tmp = Assign::new();
-        tmp.L(self.clone()).R(RHS)
+        tmp.L(self).R(&RHS.into())
     }
 }
 
@@ -815,16 +746,16 @@ impl Assign {
 
     /// 左辺設定メソッド
     #[allow(non_snake_case)]
-    pub fn L(&mut self, LHS :Box<E>) -> Assign {
-        self.lhs = LHS;
+    pub fn L<T: Into<Box<E>>>(&mut self, LHS: T) -> Assign {
+        self.lhs = LHS.into();
         let tmp = self.clone();
         return tmp;
     }
 
     /// 右辺設定メソッド
     #[allow(non_snake_case)]
-    pub fn R(&mut self, RHS : Box<E>) -> Assign {
-        self.rhs = RHS;
+    pub fn R<T: Into<Box<E>>>(&mut self, RHS: T) -> Assign {
+        self.rhs = RHS.into();
         let tmp = self.clone();
         return tmp;
     }
@@ -859,8 +790,8 @@ pub struct Always{
 /// Always構文内使用の立ち上がり信号設定構文
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-pub fn Posedge(edge: Box<E>) -> Always {
-    let e = *edge;
+pub fn Posedge<T: Into<Box<E>>>(edge: T) -> Always {
+    let e = *edge.into();
     let mut tmp = Always{br: "brock".to_string(), stmt: Vec::new(), P_edge: Vec::new(), N_edge: Vec::new()};
     match e {
         E::Ldc(wr) => tmp.P_edge.push(wr.clone()),
@@ -872,8 +803,8 @@ pub fn Posedge(edge: Box<E>) -> Always {
 /// Always構文内使用の立ち下り信号設定構文
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-pub fn Negedge(edge: Box<E>) -> Always {
-    let e = *edge;
+pub fn Negedge<T: Into<Box<E>>>(edge: T) -> Always {
+    let e = *edge.into();
     let mut tmp = Always{br: "brock".to_string(), stmt: Vec::new(), P_edge: Vec::new(), N_edge: Vec::new()};
     match e {
         E::Ldc(wr) => tmp.N_edge.push(wr.clone()),
@@ -925,8 +856,8 @@ impl Always {
     /// 立ち上がり信号設定
     #[allow(dead_code)]
     #[allow(non_snake_case)]
-    pub fn Posedge(&mut self, edge: Box<E>) -> Always {
-        let e = *edge;
+    pub fn Posedge<T: Into<Box<E>>>(&mut self, edge: T) -> Always {
+        let e = *edge.into();
         match e {
             E::Ldc(wr) => self.P_edge.push(wr.clone()),
             _ => return self.clone(),
@@ -937,8 +868,8 @@ impl Always {
     /// 立ち下がり信号設定
     #[allow(dead_code)]
     #[allow(non_snake_case)]
-    pub fn Negedge(&mut self, edge: Box<E>) -> Always {
-        let e = *edge;
+    pub fn Negedge<T: Into<Box<E>>>(&mut self, edge: T) -> Always {
+        let e = *edge.into();
         match e {
             E::Ldc(wr) => self.N_edge.push(wr.clone()),
             _ => return self.clone(),
@@ -949,8 +880,8 @@ impl Always {
     /// 分岐 if 構文追加
     #[allow(dead_code)]
     #[allow(non_snake_case)]
-    pub fn If(&mut self, C: Box<E>, S: Vec<Box<E>>) -> Always {
-        let i = If(C, S);
+    pub fn If<T: Into<Box<E>>>(&mut self, C: T, S: Vec<Box<E>>) -> Always {
+        let i = If(C.into(), S);
         self.stmt.push(i);
         self.clone()
     }
@@ -958,14 +889,14 @@ impl Always {
     /// 分岐 else if 構文追加
     #[allow(dead_code)]
     #[allow(non_snake_case)]
-    pub fn Else_If(&mut self, C: Box<E>, S: Vec<Box<E>>) -> Always {
+    pub fn Else_If<T: Into<Box<E>>>(&mut self, C: T, S: Vec<Box<E>>) -> Always {
         let n = self.stmt.pop().unwrap();
         let mut p;
         let e = *n;
         match e {
             E::BL(n) => {
                 p = n.clone();
-                p.push(IfStmt_AST{If_: true, IfE: C.clone(), ST: S});
+                p.push(IfStmt_AST{If_: true, IfE: C.into(), ST: S});
                 self.stmt.push(Box::new(E::BL(p)));
             },
             _ => {return self.clone();},
@@ -994,8 +925,8 @@ impl Always {
     /// Case文追加
     #[allow(dead_code)]
     #[allow(non_snake_case)]
-    pub fn Case(&mut self, Sel: Box<E>) -> Always {
-        let c = Case(Sel);
+    pub fn Case<T: Into<Box<E>>>(&mut self, Sel: T) -> Always {
+        let c = Case(Sel.into());
         self.stmt.push(c);
         self.clone()
     }
@@ -1003,14 +934,14 @@ impl Always {
     /// Case文内の分岐追加
     #[allow(dead_code)]
     #[allow(non_snake_case)]
-    pub fn S(&mut self, C: Box<E>, S: Vec<Box<E>>) -> Always {
+    pub fn S<T: Into<Box<E>>>(&mut self, C: T, S: Vec<Box<E>>) -> Always {
         let c = self.stmt.pop().unwrap();
         let mut p;
         let cs = *c;
         match cs {
             E::CS(tm) => {
                 p = tm.clone();
-                p.SetCaseS(C, S);
+                p.SetCaseS(C.into(), S);
                 self.stmt.push(Box::new(E::CS(p)))
             },
             _ => {
@@ -1096,8 +1027,8 @@ impl Func_AST {
     /// 分岐 if 構文追加
     #[allow(dead_code)]
     #[allow(non_snake_case)]
-    pub fn If(&mut self, C: Box<E>, S: Vec<Box<E>>) -> Func_AST {
-        let i = If(C, S);
+    pub fn If<T: Into<Box<E>>>(&mut self, C: T, S: Vec<Box<E>>) -> Func_AST {
+        let i = If(C.into(), S);
         self.stmt.push(i);
         self.clone()
     }
@@ -1105,14 +1036,14 @@ impl Func_AST {
     /// 分岐 else if 構文追加
     #[allow(dead_code)]
     #[allow(non_snake_case)]
-    pub fn Else_If(&mut self, C: Box<E>, S: Vec<Box<E>>) -> Func_AST {
+    pub fn Else_If<T: Into<Box<E>>>(&mut self, C: T, S: Vec<Box<E>>) -> Func_AST {
         let n = self.stmt.pop().unwrap();
         let mut p;
         let e = *n;
         match e {
             E::BL(n) => {
                 p = n.clone();
-                p.push(IfStmt_AST{If_: true, IfE: C.clone(), ST: S});
+                p.push(IfStmt_AST{If_: true, IfE: C.into(), ST: S});
                 self.stmt.push(Box::new(E::BL(p)));
             },
             _ => {return self.clone();},
@@ -1141,8 +1072,8 @@ impl Func_AST {
     /// Case 文追加
     #[allow(dead_code)]
     #[allow(non_snake_case)]
-    pub fn Case(&mut self, Sel: Box<E>) -> Func_AST {
-        let c = Case(Sel);
+    pub fn Case<T: Into<Box<E>>>(&mut self, Sel: T) -> Func_AST {
+        let c = Case(Sel.into());
         self.stmt.push(c);
         self.clone()
     }
@@ -1150,14 +1081,14 @@ impl Func_AST {
     /// Case 文内の分岐追加
     #[allow(dead_code)]
     #[allow(non_snake_case)]
-    pub fn S(&mut self, C: Box<E>, S: Vec<Box<E>>) -> Func_AST {
+    pub fn S<T: Into<Box<E>>>(&mut self, C: T, S: Vec<Box<E>>) -> Func_AST {
         let c = self.stmt.pop().unwrap();
         let mut p;
         let cs = *c;
         match cs {
             E::CS(tm) => {
                 p = tm.clone();
-                p.SetCaseS(C, S);
+                p.SetCaseS(C.into(), S);
                 self.stmt.push(Box::new(E::CS(p)))
             },
             _ => {
@@ -1221,9 +1152,9 @@ impl IfStmt_AST {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
-pub fn If(C: Box<E>, S: Vec<Box<E>>) -> Box<E> {
+pub fn If<T: Into<Box<E>>>(C: T, S: Vec<Box<E>>) -> Box<E> {
     let mut i = Vec::new();
-    i.push(IfStmt_AST{If_: true, IfE: C.clone(), ST: S});
+    i.push(IfStmt_AST{If_: true, IfE: C.into(), ST: S});
     Box::new(E::BL(i))
 }
 
@@ -1233,7 +1164,7 @@ pub fn If(C: Box<E>, S: Vec<Box<E>>) -> Box<E> {
 pub trait Ifset {
     #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
-    fn Else_If(self, C: Box<E>, S: Vec<Box<E>>) -> Box<E>;
+    fn Else_If<T: Into<Box<E>>>(self, C: T, S: Vec<Box<E>>) -> Box<E>;
 
     #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
@@ -1244,13 +1175,13 @@ pub trait Ifset {
 impl Ifset for Box<E> {
     #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
-    fn Else_If(self, C: Box<E>, S: Vec<Box<E>>) -> Box<E> {
+    fn Else_If<T: Into<Box<E>>>(self, C: T, S: Vec<Box<E>>) -> Box<E> {
         let e = *self;
         let mut p;
         match e {
             E::BL(n) => {
                 p = n.clone();
-                p.push(IfStmt_AST{If_: true, IfE: C.clone(), ST: S});
+                p.push(IfStmt_AST{If_: true, IfE: C.into(), ST: S});
             },
             _ => return Box::new(E::Null),
         }
@@ -1295,8 +1226,8 @@ impl CaseStmt_AST {
 
     #[allow(dead_code)]
     #[allow(non_snake_case)]
-    pub fn SetCaseS(&mut self, Cond: Box<E>, Stmt: Vec<Box<E>>) {
-        self.Select.push(Case_{CaseT: Cond, CaseS: Stmt})
+    pub fn SetCaseS<T: Into<Box<E>>>(&mut self, Cond: T, Stmt: Vec<Box<E>>) {
+        self.Select.push(Case_{CaseT: Cond.into(), CaseS: Stmt})
     }
 
     #[allow(dead_code)]
@@ -1316,8 +1247,8 @@ impl CaseStmt_AST {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
-fn Case(Sel: Box<E>) -> Box<E> {
-    let e = *Sel;
+fn Case<T: Into<Box<E>>>(Sel: T) -> Box<E> {
+    let e = *Sel.into();
     let mut C = CaseStmt_AST{CaseVar: wrVar::new(), Select: Vec::new()};
     match e {
         E::Ldc(wr) => {
@@ -1337,7 +1268,7 @@ fn Case(Sel: Box<E>) -> Box<E> {
 pub trait Caseset {
     #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
-    fn S(self, C: Box<E>, S: Vec<Box<E>>) -> Box<E>;
+    fn S<T: Into<Box<E>>>(self, C: T, S: Vec<Box<E>>) -> Box<E>;
 
     #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
@@ -1349,7 +1280,7 @@ pub trait Caseset {
 impl Caseset for Box<E> {
     #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
-    fn S(self, C: Box<E>, S: Vec<Box<E>>) -> Box<E> {
+    fn S<T: Into<Box<E>>>(self, C: T, S: Vec<Box<E>>) -> Box<E> {
         let e = *self;
         let mut n;
         match e {
@@ -1358,7 +1289,7 @@ impl Caseset for Box<E> {
             },
             _ => return Box::new(E::Null),
         }
-        n.SetCaseS(C, S);
+        n.SetCaseS(C.into(), S);
         Box::new(E::CS(n))
     }
 
@@ -1394,23 +1325,29 @@ pub struct Case_ {
 /// ステートメントブロック用ベクタ_ブロック作成 & 式追加
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-pub fn Form(formu: Box<E>) -> Vec<Box<E>>{
+pub fn Form<T: Into<Box<E>>>(formu: T) -> Vec<Box<E>> {
     let mut tmp = Vec::new();
-    tmp.push(formu);
+    tmp.push(formu.into());
     return tmp
 }
 
 /// ステートメントブロック内の式追加
 #[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
-pub trait addForm {
-     fn Form(self, formu: Box<E>) -> Vec<Box<E>>;
+pub trait addForm<T>
+where
+    T: Into<Box<E>>,
+{
+     fn Form(self, formu: T) -> Vec<Box<E>>;
 }
 
-impl addForm for Vec<Box<E>> {
-    fn Form(self, formu: Box<E>) -> Vec<Box<E>> {
+impl<T> addForm<T> for Vec<Box<E>>
+where
+    T: Into<Box<E>>,
+{
+    fn Form(self, formu: T) -> Vec<Box<E>> {
         let mut tmp = self;
-        tmp.push(formu);
+        tmp.push(formu.into());
         return tmp
     }
 }
@@ -1437,6 +1374,30 @@ pub enum E {
     Node(String),                   // 内部検索用
 }
 
+impl<'a> From<&'a Box<E>> for Box<E> {
+    fn from(x: &'a Box<E>) -> Self {
+        x.clone()
+    }
+}
+
+impl<'a> From<&'a mut Box<E>> for Box<E> {
+    fn from(x: &'a mut Box<E>) -> Self {
+        x.clone()
+    }
+}
+
+impl From<i32> for Box<E> {
+    fn from(i: i32) -> Self {
+        _Num(i)
+    }
+}
+
+impl From<&i32> for Box<E> {
+    fn from(i: &i32) -> Self {
+        _Num(*i)
+    }
+}
+
 // 変数出力関数
 #[allow(non_snake_case)]
 fn _V(V: wrVar) -> Box<E>{
@@ -1451,124 +1412,127 @@ pub fn _Num(num: i32) -> Box<E>{
 
 // 代入演算関数
 #[allow(non_snake_case)]
-pub fn _Veq(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::SB(L, R))
+pub fn _Veq<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::SB(L.into(), R.into()))
 }
 
 // 分岐構文関数
 #[allow(non_snake_case)]
-pub fn _Branch(Terms: Box<E>, TrueNode: Box<E>, FalseNode: Box<E>) -> Box<E> {
-    Box::new(E::PL(Terms, TrueNode, FalseNode))
+pub fn _Branch<T: Into<Box<E>>, U: Into<Box<E>>, V: Into<Box<E>>>(
+    Terms: T,
+    TrueNode: U,
+    FalseNode: V,
+) -> Box<E> {
+    Box::new(E::PL(Terms.into(), TrueNode.into(), FalseNode.into()))
 }
-
 
 // 演算子関数
 /// "+" addition
 #[allow(non_snake_case)]
-fn _Add(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "add".to_string(), L, R))
+fn _Add<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("add".to_string(), L.into(), R.into()))
 }
 
 /// "-" substruction
 #[allow(non_snake_case)]
-fn _Sub(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "sub".to_string(), L, R))
+fn _Sub<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("sub".to_string(), L.into(), R.into()))
 }
 
 /// "*" multipication
 #[allow(non_snake_case)]
-fn _Mul(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "mul".to_string(), L, R))
+fn _Mul<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("mul".to_string(), L.into(), R.into()))
 }
 
 /// "/" division
 #[allow(non_snake_case)]
-fn _Div(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "div".to_string(), L, R))
+fn _Div<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("div".to_string(), L.into(), R.into()))
 }
 
 /// "%" modulo
 #[allow(non_snake_case)]
-fn _Mod(L : Box<E>, R : Box<E>) -> Box<E> {
-    Box::new(E::Bin( "mod".to_string(), L, R))
-} 
+fn _Mod<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("mod".to_string(), L.into(), R.into()))
+}
 
 /// "||" or
 #[allow(non_snake_case)]
-fn _LOr(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "lor".to_string(), L, R))
+fn _LOr<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("lor".to_string(), L.into(), R.into()))
 }
 
 /// "&&" and
 #[allow(non_snake_case)]
-fn _LAnd(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "land".to_string(), L, R))
+fn _LAnd<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("land".to_string(), L.into(), R.into()))
 }
 
 /// "|" or
 #[allow(non_snake_case)]
-fn _Or(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "or".to_string(), L, R))
+fn _Or<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("or".to_string(), L.into(), R.into()))
 }
 
 /// "&" and
 #[allow(non_snake_case)]
-fn _And(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "and".to_string(), L, R))
+fn _And<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("and".to_string(), L.into(), R.into()))
 }
 
 /// "^" exclusive or
 #[allow(non_snake_case)]
-fn _Xor(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "xor".to_string(), L, R))
+fn _Xor<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("xor".to_string(), L.into(), R.into()))
 }
 
 /// "==" equal
 #[allow(non_snake_case)]
-pub fn _Eq(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "equal".to_string(), L, R))
+pub fn _Eq<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("equal".to_string(), L.into(), R.into()))
 }
 
 /// "!=" not equal
 #[allow(non_snake_case)]
-pub fn _Neq(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "Not equal".to_string(), L, R))
+pub fn _Neq<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("Not equal".to_string(), L.into(), R.into()))
 }
 
 /// "<<" left shift
 #[allow(non_snake_case)]
-fn _LSH(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "lshift".to_string(), L, R))
+fn _LSH<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("lshift".to_string(), L.into(), R.into()))
 }
 
 /// ">>" right shift
 #[allow(non_snake_case)]
-fn _RSH(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "rshift".to_string(), L, R))
+fn _RSH<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("rshift".to_string(), L.into(), R.into()))
 }
 
 /// "<" more than
 #[allow(non_snake_case)]
-fn _MTH(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "more_than".to_string(), L, R))
+fn _MTH<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("more_than".to_string(), L.into(), R.into()))
 }
 
 /// ">" less than
 #[allow(non_snake_case)]
-fn _LTH(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "less_than".to_string(), L, R))
+fn _LTH<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("less_than".to_string(), L.into(), R.into()))
 }
 
 /// "<=" or more
 #[allow(non_snake_case)]
-fn _OMR(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "or_more".to_string(), L, R))
+fn _OMR<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("or_more".to_string(), L.into(), R.into()))
 }
 
 /// ">=" or less
 #[allow(non_snake_case)]
-fn _OLS(L : Box<E>, R : Box<E>) -> Box<E>{
-    Box::new(E::Bin( "or_less".to_string(), L, R))
+fn _OLS<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("or_less".to_string(), L.into(), R.into()))
 }
 
 /**
@@ -1576,11 +1540,11 @@ fn _OLS(L : Box<E>, R : Box<E>) -> Box<E>{
   *
   **/
 pub trait Notc {
-    fn not(&mut self) -> Box<E>;
+    fn not(&self) -> Box<E>;
 }
 
 impl Notc for Box<E> {
-    fn not(&mut self) -> Box<E> {
+    fn not(&self) -> Box<E> {
         Box::new(E::No(self.clone()))
     }
 }
@@ -1593,243 +1557,223 @@ impl Not for Box<E> {
     }
 }
 
-impl Add<Box<E>> for Box<E> {
+impl<T> Add<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn add(self, other: Box<E>) -> Box<E> {
-        _Add(self, other)
+    fn add(self, other: T) -> Box<E> {
+        _Add(self, other.into())
     }
 }
 
-impl Add<i32> for Box<E> {
+impl<T> Add<T> for &Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn add(self, other: i32) -> Box<E> {
-        _Add(self, _Num(other))
+    fn add(self, other: T) -> Box<E> {
+        _Add(self, &other.into())
     }
 }
 
-impl Add<Box<E>> for i32 {
+impl<T> Sub<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn add(self, other: Box<E>) -> Box<E> {
-        _Add(_Num(self), other)
+    fn sub(self, other: T) -> Box<E> {
+        _Sub(self, other.into())
     }
 }
 
-impl Sub<Box<E>> for Box<E> {
+impl<T> Sub<T> for &Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn sub(self, other: Box<E>) -> Box<E> {
-        _Sub(self, other)
+    fn sub(self, other: T) -> Box<E> {
+        _Sub(self, &other.into())
     }
 }
 
-impl Sub<i32> for Box<E> {
+impl<T> Mul<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn sub(self, other: i32) -> Box<E> {
-        _Sub(self, _Num(other))
+    fn mul(self, other: T) -> Box<E> {
+        _Mul(self, other.into())
     }
 }
 
-impl Sub<Box<E>> for i32 {
+impl<T> Mul<T> for &Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn sub(self, other: Box<E>) -> Box<E> {
-        _Sub(_Num(self), other)
+    fn mul(self, other: T) -> Box<E> {
+        _Mul(self, &other.into())
     }
 }
 
-impl Mul<Box<E>> for Box<E> {
+impl<T> Div<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn mul(self, other: Box<E>) -> Box<E> {
-        _Mul(self, other)
+    fn div(self, other: T) -> Box<E> {
+        _Div(self, other.into())
     }
 }
 
-impl Mul<i32> for Box<E> {
+impl<T> Div<T> for &Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn mul(self, other: i32) -> Box<E> {
-        _Mul(self, _Num(other))
+    fn div(self, other: T) -> Box<E> {
+        _Div(self, &other.into())
     }
 }
 
-impl Mul<Box<E>> for i32 {
+impl<T> Rem<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn mul(self, other: Box<E>) -> Box<E> {
-        _Mul(_Num(self), other)
+    fn rem(self, other: T) -> Box<E> {
+        _Mod(self, other.into())
     }
 }
 
-impl Div<Box<E>> for Box<E> {
+impl<T> Rem<T> for &Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn div(self, other: Box<E>) -> Box<E> {
-        _Div(self, other)
+    fn rem(self, other: T) -> Box<E> {
+        _Mod(self, &other.into())
     }
 }
 
-impl Div<i32> for Box<E> {
+impl<T> BitOr<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn div(self, other: i32) -> Box<E> {
-        _Div(self, _Num(other))
+    fn bitor(self, other: T) -> Box<E> {
+        _Or(self, other.into())
     }
 }
 
-impl Div<Box<E>> for i32 {
+impl<T> BitOr<T> for &Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn div(self, other: Box<E>) -> Box<E> {
-        _Div(_Num(self), other)
+    fn bitor(self, other: T) -> Box<E> {
+        _Or(self, &other.into())
     }
 }
 
-impl Rem<Box<E>> for Box<E> {
+impl<T> BitAnd<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn rem(self, other: Box<E>) ->Box<E> {
-        _Mod(self, other)
+    fn bitand(self, other: T) -> Box<E> {
+        _And(self, other.into())
     }
 }
 
-impl Rem<i32> for Box<E> {
+impl<T> BitAnd<T> for &Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn rem(self, other: i32) -> Box<E> {
-        _Mod(self, _Num(other))
+    fn bitand(self, other: T) -> Box<E> {
+        _And(self, &other.into())
     }
 }
 
-impl Rem<Box<E>> for i32 {
+impl<T> BitXor<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn rem(self, other: Box<E>) -> Box<E> {
-        _Mod(_Num(self), other)
+    fn bitxor(self, other: T) -> Box<E> {
+        _Xor(self, other.into())
     }
 }
 
-impl BitOr<Box<E>> for Box<E> {
+impl<T> BitXor<T> for &Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn bitor(self, other: Box<E>) -> Box<E> {
-        _Or(self, other)
+    fn bitxor(self, other: T) -> Box<E> {
+        _Xor(self, &other.into())
     }
 }
 
-impl BitOr<i32> for Box<E> {
+impl<T> Shl<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn bitor(self, other: i32) -> Box<E> {
-        _Or(self, _Num(other))
+    fn shl(self, other: T) -> Box<E> {
+        _LSH(self, other.into())
     }
 }
 
-impl BitOr<Box<E>> for i32 {
+impl<T> Shl<T> for &Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn bitor(self, other: Box<E>) -> Box<E> {
-        _Or(_Num(self), other)
+    fn shl(self, other: T) -> Box<E> {
+        _LSH(self, &other.into())
     }
 }
 
-impl BitAnd<Box<E>> for Box<E> {
+impl<T> Shr<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn bitand(self, other: Box<E>) -> Box<E> {
-        _And(self, other)
+    fn shr(self, other: T) -> Box<E> {
+        _RSH(self, other.into())
     }
 }
 
-impl BitAnd<i32> for Box<E> {
+impl<T> Shr<T> for &Box<E>
+where
+    T: Into<Box<E>>,
+{
     type Output = Box<E>;
 
-    fn bitand(self, other: i32) -> Box<E> {
-        _And(self, _Num(other))
-    }
-}
-
-impl BitAnd<Box<E>> for i32 {
-    type Output = Box<E>;
-
-    fn bitand(self, other: Box<E>) -> Box<E> {
-        _And(_Num(self), other)
-    }
-}
-
-impl BitXor<Box<E>> for Box<E> {
-    type Output = Box<E>;
-
-    fn bitxor(self, other: Box<E>) -> Box<E> {
-        _Xor(self, other)
-    }
-}
-
-impl BitXor<i32> for Box<E> {
-    type Output = Box<E>;
-
-    fn bitxor(self, other: i32) -> Box<E> {
-        _Xor(self, _Num(other))
-    }
-}
-
-impl BitXor<Box<E>> for i32 {
-    type Output = Box<E>;
-
-    fn bitxor(self, other: Box<E>) -> Box<E> {
-        _Xor(_Num(self), other)
-    }
-}
-
-impl Shl<Box<E>> for Box<E> {
-    type Output = Box<E>;
-
-    fn shl(self, other: Box<E>) -> Box<E> {
-        _LSH(self, other)
-    }
-}
-
-impl Shl<i32> for Box<E> {
-    type Output = Box<E>;
-
-    fn shl(self, other: i32) -> Box<E> {
-        _LSH(self, _Num(other))
-    }
-}
-
-impl Shl<Box<E>> for i32 {
-    type Output = Box<E>;
-
-    fn shl(self, other: Box<E>) -> Box<E> {
-        _LSH(_Num(self), other)
-    }
-}
-
-impl Shr<Box<E>> for Box<E> {
-    type Output = Box<E>;
-
-    fn shr(self, other: Box<E>) -> Box<E> {
-        _RSH(self, other)
-    }
-}
-
-impl Shr<i32> for Box<E> {
-    type Output = Box<E>;
-
-    fn shr(self, other: i32) -> Box<E> {
-        _RSH(self, _Num(other))
-    }
-}
-
-impl Shr<Box<E>> for i32 {
-    type Output = Box<E>;
-
-    fn shr(self, other: Box<E>) -> Box<E> {
-        _RSH(_Num(self), other)
+    fn shr(self, other: T) -> Box<E> {
+        _RSH(self, &other.into())
     }
 }
 
@@ -1841,25 +1785,29 @@ pub trait PartialEq<Rhs = Self> {
     fn ne(self, other: Rhs) -> Box<E>;
 }
 
-impl PartialEq<Box<E>> for Box<E> {
-
-    fn eq(self, other: Box<E>) -> Box<E> {
-        _Eq(self, other)
+impl<T> PartialEq<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
+    fn eq(self, other: T) -> Box<E> {
+        _Eq(self, other.into())
     }
 
-    fn ne(self, other: Box<E>) -> Box<E> {
-        _Neq(self, other)
+    fn ne(self, other: T) -> Box<E> {
+        _Neq(self, other.into())
     }
 }
 
-impl PartialEq<i32> for Box<E> {
-
-    fn eq(self, other: i32) -> Box<E> {
-        _Eq(self, _Num(other))
+impl<T> PartialEq<T> for &Box<E>
+where
+    T: Into<Box<E>>,
+{
+    fn eq(self, other: T) -> Box<E> {
+        _Eq(self, &other.into())
     }
 
-    fn ne(self, other: i32) -> Box<E> {
-        _Neq(self, _Num(other))
+    fn ne(self, other: T) -> Box<E> {
+        _Neq(self, &other.into())
     }
 }
 
@@ -1874,90 +1822,93 @@ pub trait PartialOrd<Rhs = Self>{
     fn ge(self, other: Rhs) -> Box<E>;
 }
 
-impl PartialOrd<Box<E>> for Box<E> {
-    fn lt(self, other: Box<E>) -> Box<E>{
-        _LTH(self, other)
+impl<T> PartialOrd<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
+    fn lt(self, other: T) -> Box<E> {
+        _LTH(self, other.into())
     }
 
-    fn le(self, other: Box<E>) -> Box<E>{
-        _OLS(self, other)
+    fn le(self, other: T) -> Box<E> {
+        _OLS(self, other.into())
     }
 
-    fn gt(self, other: Box<E>) -> Box<E>{
-        _MTH(self, other)
+    fn gt(self, other: T) -> Box<E> {
+        _MTH(self, other.into())
     }
 
-    fn ge(self, other: Box<E>) -> Box<E>{
-        _OMR(self, other)
+    fn ge(self, other: T) -> Box<E> {
+        _OMR(self, other.into())
     }
 }
 
-impl PartialOrd<i32> for Box<E> {
-    fn lt(self, other: i32) -> Box<E>{
-        _LTH(self, _Num(other))
+impl<T> PartialOrd<T> for &Box<E>
+where
+    T: Into<Box<E>>,
+{
+    fn lt(self, other: T) -> Box<E> {
+        _LTH(self, &other.into())
     }
 
-    fn le(self, other: i32) -> Box<E>{
-        _OLS(self, _Num(other))
+    fn le(self, other: T) -> Box<E> {
+        _OLS(self, &other.into())
     }
 
-    fn gt(self, other: i32) -> Box<E>{
-        _MTH(self, _Num(other))
+    fn gt(self, other: T) -> Box<E> {
+        _MTH(self, &other.into())
     }
 
-    fn ge(self, other: i32) -> Box<E>{
-        _OMR(self, _Num(other))
+    fn ge(self, other: T) -> Box<E> {
+        _OMR(self, &other.into())
     }
 }
 
 // 代入文生成
 pub trait Subs<Rhs = Self> {
-    fn sst(self, other: Rhs) -> Box<E>;
+    fn sst(&self, other: Rhs) -> Box<E>;
 }
 
-impl Subs<i32> for Box<E> {
-    fn sst(self, other: i32) -> Box<E> {
-        _Veq(self.clone(), _Num(other))
-    }
-}
-
-impl Subs<Box<E>> for Box<E> {
-    fn sst(self, other: Box<E>) -> Box<E> {
-        _Veq(self.clone(), other)
+impl<T> Subs<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
+    fn sst(&self, other: T) -> Box<E> {
+        _Veq(self.clone(), other.into())
     }
 }
 
 // 論理演算子生成
 pub trait Logi<Rhs = Self> {
-    fn land(self, other: Rhs) -> Box<E>;
+    fn land(&self, other: Rhs) -> Box<E>;
 
-    fn lor(self, other: Rhs) -> Box<E>;
+    fn lor(&self, other: Rhs) -> Box<E>;
 }
 
-impl Logi<Box<E>> for Box<E> {
-    fn land(self, other: Box<E>) -> Box<E> {
-        _LAnd(self.clone(), other)
+impl<T> Logi<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
+    fn land(&self, other: T) -> Box<E> {
+        _LAnd(self, &other.into())
     }
 
-    fn lor(self, other: Box<E>) -> Box<E> {
-        _LOr(self.clone(), other)
+    fn lor(&self, other: T) -> Box<E> {
+        _LOr(self, &other.into())
     }
 }
 
 // メモリ、レジスタ用アドレス指定
 pub trait Addr<Rs = Self> {
-    fn addr(&mut self, address: Rs) ->Box<E>;
+    fn addr(&self, address: Rs) ->Box<E>;
 }
 
-impl Addr<i32> for Box<E>{
-    fn addr(&mut self, address: i32) -> Box<E> {
-        Box::new(E::MEM(self.clone(), _Num(address)))
-    }
-}
-
-impl Addr<Box<E>> for Box<E>{
-    fn addr(&mut self, address: Box<E>) -> Box<E> {
-        Box::new(E::MEM(self.clone(), address))
+impl<T> Addr<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
+    fn addr(&self, address: T) -> Box<E> {
+        Box::new(E::MEM(self.clone(), address.into()))
     }
 }
 
@@ -2643,9 +2594,9 @@ macro_rules! Blank {
 /// FSM生成関数
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-pub fn Clock_Reset(in_clk: Box<E>, in_rst: Box<E>) -> FsmModule {
+pub fn Clock_Reset<T: Into<Box<E>>, U: Into<Box<E>>>(in_clk: T, in_rst: U) -> FsmModule {
     let p = wrVar::new().Reg("state", 32);
-    FsmModule{clk: in_clk, rst: in_rst, fsm: p, State: Vec::new(), Current_state: 0}
+    FsmModule{clk: in_clk.into(), rst: in_rst.into(), fsm: p, State: Vec::new(), Current_state: 0}
 }
 
 /// FSMモジュール
@@ -2704,7 +2655,7 @@ impl FsmModule {
     // カレントステートから次のステートへの定義
     #[allow(dead_code)]
     #[allow(non_snake_case)]
-    pub fn goto(mut self, State_name: &str, Branch: Box<E>) -> FsmModule{
+    pub fn goto<T: Into<Box<E>>>(mut self, State_name: &str, Branch: T) -> FsmModule {
         
         let SelfS = self.fsm.clone();
         let mut st = "".to_string();
@@ -2712,7 +2663,7 @@ impl FsmModule {
         st = st + "_Next";
         let NState = wrVar::new().Reg(&st,0);
         let Goto_ = wrVar::new().Parameter(State_name,0);
-        self.State[(self.Current_state as usize)].SetBranch(Branch.clone(), F!(NState = Goto_));
+        self.State[(self.Current_state as usize)].SetBranch(Branch.into(), F!(NState = Goto_));
 
         self.clone()
     }
@@ -2720,18 +2671,19 @@ impl FsmModule {
     // 指定ステートからカレントステートへの定義(指定ステートの作成後以降に使用可)
     #[allow(dead_code)]
     #[allow(non_snake_case)]
-    pub fn from(mut self, State_name: &str, Branch: Box<E>) -> FsmModule {
+    pub fn from<T: Into<Box<E>>>(mut self, State_name: &str, Branch: T) -> FsmModule {
         let SelfS = self.fsm.clone();
         let mut st = "".to_string();
         if let E::Ldc(wr) = *SelfS.clone() { st = wr.getName().clone() };
         st = st + "_Next";
         let NState = wrVar::new().Reg(&st,0);
         let NameCurrentState = self.State[((self.Current_state-1) as usize)].getStateName();
+        let branch = Branch.into();
         for x in &mut self.State {
             let Nx = x.getStateName();
             if Nx == State_name.to_string() {
                 let Goto_ = wrVar::new().Parameter(&NameCurrentState,0);
-                x.SetBranch(Branch.clone(), F!(NState = Goto_));
+                x.SetBranch(branch.clone(), F!(NState = Goto_));
             }
         }
 
@@ -2804,14 +2756,14 @@ impl StateModule {
     // ステート分岐先設定
     #[allow(dead_code)]
     #[allow(non_snake_case)]
-    fn SetBranch(&mut self, Terms: Box<E>, Form: Box<E>) -> bool {
-        let e = *(Terms.clone());
+    fn SetBranch<T: Into<Box<E>>, U: Into<Box<E>>>(&mut self, Terms: T, Form: U) -> bool {
+        let e = *(Terms.into());
         let mut tmp = Vec::new();
-        tmp.push(Form);
+        tmp.push(Form.into());
         
         match e {
-            E::Null => self.Branch.push(IfStmt_AST{If_: true, IfE: Terms, ST: tmp}),
-            _ => self.Branch.push(IfStmt_AST{If_: true, IfE: Terms, ST: tmp}),
+            E::Null => self.Branch.push(IfStmt_AST{If_: true, IfE: Box::new(e), ST: tmp}),
+            _ => self.Branch.push(IfStmt_AST{If_: true, IfE: Box::new(e), ST: tmp}),
         }
         return true;
     }
@@ -2878,10 +2830,10 @@ pub struct AXISLite {
 /// AXI Slave Lite インターフェース生成
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-pub fn AXIS_Lite_new(clock: Box<E>, reset: Box<E>) -> AXISLite {
+pub fn AXIS_Lite_new<T: Into<Box<E>>, U: Into<Box<E>>>(clock: T, reset: U) -> AXISLite {
 	AXISLite{
-		clk: clock,
-		rst: reset,
+		clk: clock.into(),
+		rst: reset.into(),
 		reg_array: Vec::new(),
 		wLocal_write: Vec::new(),
 		current_reg: 0
@@ -2908,8 +2860,11 @@ pub trait AXI_S_IF_Set<T> {
 /// ローカルからのレジスタ制御設定トレイト
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
-pub trait AXI_S_IF_LocalWrite<T> {
-    fn RegWrite(&mut self, write_en: Box<E>, write_data: T);
+pub trait AXI_S_IF_LocalWrite<T, U>
+where
+    U: Into<Box<E>>,
+{
+    fn RegWrite(&mut self, write_en: U, write_data: T);
 }
 
 impl AXI_S_IF_Set<AXISLite> for AXISLite {
@@ -2956,10 +2911,14 @@ impl AXI_S_IF_Set<AXISLite> for AXISLite {
 }
 
 /// AXIS Lite ローカル側データ書き込み処理設定
-impl AXI_S_IF_LocalWrite<Box<E>> for AXISLite {
-    fn RegWrite(&mut self, write_en: Box<E>, write_data: Box<E>) {
+impl<T, U> AXI_S_IF_LocalWrite<T, U> for AXISLite
+where
+    T: Into<Box<E>>,
+    U: Into<Box<E>>,
+{
+    fn RegWrite(&mut self, write_en: U, write_data: T) {
 		// localwrite AXI Register
-		self.wLocal_write[self.current_reg.clone() as usize] = (write_en, write_data);
+		self.wLocal_write[self.current_reg.clone() as usize] = (write_en.into(), write_data.into());
 		return;
 	}
 }
@@ -2969,8 +2928,8 @@ impl AXI_S_IF_LocalWrite<Box<E>> for AXISLite {
 
 /// AST分解メソッド
 #[allow(non_snake_case)]
-pub fn _Decomp(e: Box<E>, Sel : &str) -> Box<E>{
-    let m = *e;
+pub fn _Decomp<T: Into<Box<E>>>(e: T, Sel: &str) -> Box<E> {
+    let m = *e.into();
     match m {
         E::Bin(_, ref L, ref R) => {
             if Sel == "L" {Box::new(*L.clone())}
@@ -2994,8 +2953,8 @@ pub fn _Decomp(e: Box<E>, Sel : &str) -> Box<E>{
 
 /// AST文字列抽出メソッド
 #[allow(non_snake_case)]
-pub fn _StrOut(e: Box<E>) -> String {
-    let m = *e;
+pub fn _StrOut<T: Into<Box<E>>>(e: T) -> String {
+    let m = *e.into();
     match m {
         E::Ldc(WR) => WR.getName(),
         E::Bin(ref Op, _, _) => Op.clone(),
@@ -3005,8 +2964,8 @@ pub fn _StrOut(e: Box<E>) -> String {
 
 /// AST数値抽出メソッド
 #[allow(non_snake_case)]
-pub fn _NumOut(e: Box<E>) -> i32 {
-    let m = *e;
+pub fn _NumOut<T: Into<Box<E>>>(e: T) -> i32 {
+    let m = *e.into();
     match m {
         E::Ldc(WR) => WR.getWidth(),
         E::Num(i) => i,

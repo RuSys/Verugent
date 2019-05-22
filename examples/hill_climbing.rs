@@ -15,9 +15,9 @@ fn hill_climbing() {
 
     let start = m.Input("Start", 1);
     let data = m.Input("Data", 32);
-    let mut ready = m.Output("Ready", 1);
-    let mut busy = m.Output("Busy", 1);
-    let mut done = m.Output("Done", 1);
+    let ready = m.Output("Ready", 1);
+    let busy = m.Output("Busy", 1);
+    let done = m.Output("Done", 1);
 
     let evalfuncdata = m.Reg_Output("Eval",32);
     let evalstart = m.Reg_Output("EvalS", 1);
@@ -37,12 +37,12 @@ fn hill_climbing() {
 
     let currentnode = m.Reg("CurrentNode", 32);
 
-    let mut neighborset = m.Wire("NBWire", 32);
+    let neighborset = m.Wire("NBWire", 32);
 
-    m.Assign(neighborset._e(neighborcount.clone() + currentnode.clone()));
-    m.Assign(result.clone()._e(bestdata.clone()));
+    m.Assign(neighborset._e(&neighborcount + &currentnode));
+    m.Assign(result._e(&bestdata));
 
-    let mut fsm = Clock_Reset(clk.clone(), rst.clone())
+    let mut fsm = Clock_Reset(&clk, &rst)
                 .State("State")
                 .AddState("IDLE").goto("INIT", F!(start == 1))
                 .AddState("INIT").goto("NINIT", F!(evalvalid == 1))
@@ -64,16 +64,16 @@ fn hill_climbing() {
 
     let fstate = m.FSM(fsm);
 
-    m.Always(Posedge(clk.clone()).Posedge(rst.clone()).block()
-                .If(rst.clone(), Form(F!(evalfuncdata = 0))
-                                .Form(F!(bestdata = 0))
-                                .Form(F!(besteval = 0))
-                                .Form(F!(evalstart = 0))
-                                .Form(F!(nextdata = 0))
-                                .Form(F!(nexteval = 0))
-                                .Form(F!(neighborcount = 0))
-                                .Form(F!(tmpeval = 0))
-                                .Form(F!(currentnode = 0))
+    m.Always(Posedge(clk).Posedge(&rst).block()
+                .If(rst, Form(F!(evalfuncdata = 0))
+                        .Form(F!(bestdata = 0))
+                        .Form(F!(besteval = 0))
+                        .Form(F!(evalstart = 0))
+                        .Form(F!(nextdata = 0))
+                        .Form(F!(nexteval = 0))
+                        .Form(F!(neighborcount = 0))
+                        .Form(F!(tmpeval = 0))
+                        .Form(F!(currentnode = 0))
                     )
                 .Else(Form(If(F!(fstate == s_init), Form(F!(bestdata = data))
                                                   .Form(F!(evalfuncdata = data))
@@ -93,7 +93,7 @@ fn hill_climbing() {
                             )
                             .Else_If(F!(fstate == s_upd_n2), Form(If(F!(nexteval < tmpeval), Form(F!(nexteval = tmpeval))
                                                                                             .Form(F!(nextdata = evalfuncdata))
-                                                                                            .Form(neighborcount.clone().sst(neighborcount.clone() + 1))
+                                                                                            .Form(neighborcount.sst(&neighborcount + 1))
                                     ))
                             )
                             .Else_If(F!(fstate == s_pproc), Form(If(F!(nextdata > bestdata), Form(F!(bestdata = nextdata))))

@@ -14,9 +14,9 @@ fn led() {
     let rst  = m.Input("RST", 1);
     let btn1 = m.Input("i_BTN1", 1);
     let btn2 = m.Input("i_BTN2", 1);
-    let mut led = m.Output("o_LED", 8);
+    let led = m.Output("o_LED", 8);
 
-    let mut fsm = Clock_Reset(clk.clone(),rst.clone())
+    let mut fsm = Clock_Reset(clk,&rst)
                 .State("State")
                 .AddState("IDLE").goto("RUN", F!(btn1 == 1).land(F!(rst != 1)))
                 .AddState("RUN").goto("END", F!(btn2 == 1))
