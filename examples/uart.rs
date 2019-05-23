@@ -59,7 +59,7 @@ fn uart() {
                     Form(F!(rxdata = rxreg))
                    .Form(F!(rxemp = 1))))
                  .Form(If(&rxen, 
-                    Form(If(rxbsy.not().land(rxd2.not()), 
+                    Form(If(!rxbsy.land(rxd2.not()), 
                         Form(F!(rxbsy = 1))
                        .Form(F!(rxsmpl = 1))
                        .Form(F!(rxcnt = 0))
@@ -77,7 +77,7 @@ fn uart() {
                                         .Form(If(F!(rxd2 == 0), Form(F!(rxfrerr = 1)))
                                                 .Else(Form(F!(rxemp = 0))
                                                      .Form(F!(rxfrerr = 0))
-                                                     .Form(rxovrn.sst(rxemp.not()))))
+                                                     .Form(F!(rxovrn = !rxemp))))
                                      ))
                                 )
                             ))

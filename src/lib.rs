@@ -6,7 +6,7 @@ mod tests {
         let mut m = VModule::new("LED");
         m.Input("CLK", 1);
         m.Input("RST", 1);
-        assert!(m.endmodule().len() >= 0, "Code not generated successfully...");
+        assert!(!m.endmodule().is_empty(), "Code not generated successfully...");
     }
 }
 

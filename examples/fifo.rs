@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate verugent;
 
 use verugent::vcore::*;
@@ -36,12 +37,12 @@ fn fifo() {
     m.Assign(rp._e(rcnt.addr(&widthad-1)));
 
     m.Always(Posedge(clk).Posedge(&rst).non()
-                .If(rst, Form(wcnt.sst(0))
-                        .Form(rcnt.sst(0)))
+                .If(rst, Form(F!(wcnt = 0))
+                        .Form(F!(rcnt = 0)))
                 .Else(vec![
-                    If(wr & full.not(), Form(data.addr(wp).sst(d))
-                                         .Form(wcnt.sst(&wcnt + 1))),
-                    If(rd & empty.not(), Form(rcnt.sst(&rcnt + 1)))]
+                    If(wr & !full, Form(data.addr(wp).sst(d))
+                                         .Form(F!(wcnt = (&wcnt + 1)))),
+                    If(rd & !empty, Form(F!(rcnt = (&rcnt + 1))))]
             ));
     m.endmodule();
     m.genPrint();
