@@ -3,6 +3,7 @@ use std::ops::*;
 use std::string::String;
 use std::fs::File;
 use std::io::Write;
+use std::fs::OpenOptions;
 
 use std::*;
 
@@ -369,7 +370,8 @@ impl VModule {
     }
 
     pub fn genFile(&mut self, path: &str) -> Result<(),Box<std::error::Error>> {
-        let mut file = File::create(path)?;
+        //let mut file = File::create(path)?;
+		let mut file = OpenOptions::new().write(true).create(true).open(path)?;
         write!(file, "{}", self.code)?;
         file.flush()?;
         Ok(())
@@ -402,7 +404,7 @@ impl AXI_trait<AXISLite> for VModule {
         // read address channel
         let o_arr = self.Output(&(format!("o_S_ARREADY{}", length.clone())), 0);
         let i_arv = self.Input(&(format!("i_S_ARVALID{}", length.clone())), 0);
-        let i_ara = self.Input(&(format!("i_S_ARADDR{}", length.clone())), reg_addr_width);
+        self.Input(&(format!("i_S_ARADDR{}", length.clone())), reg_addr_width);
         self.Input(&(format!("i_S_ARPROT{}", length.clone())), 3);
 
         // read data channel
@@ -431,7 +433,7 @@ impl AXI_trait<AXISLite> for VModule {
         // inner wire and register
         let r_arr = self.Reg(&(format!("r_arready{}", length.clone())), 0);
         let w_arv = self.Wire(&(format!("w_arvalid{}", length.clone())), 0);
-        let w_ara = self.Wire(&(format!("w_araddr{}", length.clone())), reg_addr_width);
+        self.Reg(&(format!("r_araddr{}", length.clone())), reg_addr_width);
 
         let r_rda = self.Reg(&(format!("r_rdata{}", length.clone())), 32);
         let r_rsp = self.Reg(&(format!("r_rresp{}", length.clone())), 2);
@@ -454,7 +456,6 @@ impl AXI_trait<AXISLite> for VModule {
         // 接続の追加
         self.Assign(o_arr._e(r_arr));
         self.Assign(w_arv._e(i_arv));
-        self.Assign(w_ara._e(i_ara));
 
         self.Assign(o_rda._e(r_rda));
         self.Assign(o_rsp._e(r_rsp));
@@ -473,6 +474,13 @@ impl AXI_trait<AXISLite> for VModule {
         self.Assign(o_bre._e(r_bre));
         self.Assign(o_bva._e(r_bva));
         self.Assign(w_bre._e(i_bre));
+
+		for x in setAXI.reg_array.clone() {
+			//println!("{:?}", (*x));
+			if let E::Ldc(wr) = *x {
+				self.Reg( &( wr.getName() ), wr.getWidth());
+			};
+		}
 
         self.Axi.push(AXI::Lite(setAXI));
     }
@@ -2361,7 +2369,7 @@ fn PrintCase(case_stmt: CaseStmt_AST, cnfg: &str, indent: i32) -> String {
     for x in ctmp {
         let e = x.CaseT.clone();
         let ef = x.CaseS.clone();
-        let mut tm = *e.clone();
+        let tm = *e.clone();
         for _ in 0..indent+1 {
             st += "    ";
         }
@@ -2506,18 +2514,18 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
 
 	for x in tmp.reg_array.clone() {
 		//println!("            r_{} <= 32'd0;", _StrOut(x));
-        st += &format!("            r_{} <= 32'd0;\n", _StrOut(x));
+        st += &format!("            {} <= 32'd0;\n", _StrOut(x));
 	}
     st += &format!("        end\n        else begin\n            if( w_wdata_en{} == 1'd1 ) begin\n", count);
-    st += &format!("                case ( w_waddr{}[{}:2] )\n", count, reg_addr_width-1);
+    st += &format!("                case ( r_awaddr{}[{}:2] )\n", count, reg_addr_width-1);
     
     // generate write register
     for x in reg_tmp.clone() {
         // Unpack
-        let mut reg = x;
+        let reg = x;
         st += &format!("                    {}'h{:02X} : begin\n", reg_addr_width-2, addr_width);
         for addr_count in 0..4 {
-            st += &format!("                        if ( w_wstrb{}[{}] == 1'b1 ) r_{} <= w_wdata{0}[{}:{}]\n",
+            st += &format!("                        if ( r_wstrb{}[{}] == 1'b1 ) {} <= w_wdata{0}[{}:{}];\n",
 			    count, addr_count, _StrOut(reg.clone()), 8*(addr_count+1)-1, 8*addr_count);
         }
 
@@ -2526,7 +2534,7 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
     }
     st += "                    default: begin\n";
 	for x in reg_tmp.clone() {
-        st += &format!("                        r_{} <= r_{}\n", 
+        st += &format!("                        {} <= {};\n", 
             _StrOut(x.clone()), _StrOut(x.clone()));
 	}
     st += "                    end\n                endcase\n            end\n";
@@ -2538,7 +2546,7 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
 		i += 1;
 		if let E::Null = *(x.0.clone()) {continue;}
         st += &format!("\n            if( {} ) begin \n", _StrOut(x.0));
-        st += &format!("                    r_{} <= {};\n",
+        st += &format!("                    {} <= {};\n",
             _StrOut(reg_tmp[i as usize].clone()), _StrOut(x.1));
         st += "            end\n";
 	}
@@ -2553,13 +2561,13 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
     st += "        end else begin\n";
     
     st += &format!("            if( r_awready{} && w_awvalid{0} && ~r_bvalid{0} && r_wready{0} && w_wvalid{0} ) begin\n", count);
-    st += &format!("                r_bvalid{0} <= 1'b1;\n                r_bresp{0} <= 2'b1;\n            end else if( w_bready{0} && r_bvalid{0} ) begin\n                r_bvalid{0} <= 1'b;\n            end\n\n",count);
+    st += &format!("                r_bvalid{0} <= 1'b1;\n                r_bresp{0} <= 2'b1;\n            end else if( w_bready{0} && r_bvalid{0} ) begin\n                r_bvalid{0} <= 1'b0;\n            end\n\n",count);
 
     st += &format!("            if( ~r_arready{} && w_arvalid{0} ) begin\n", count);
     st += &format!("                r_arready{0} <= 1'b1;\n                r_araddr{0} <= i_S_ARADDR{0};\n            end else begin\n                r_arready{0} <= 1'b0;\n            end\n", count);
 
-    st += &format!("            if( r_arready{} && w_arvalid{0} && r_rvarid{0} ) begin\n", count);
-    st += &format!("                r_rvarid{} <= 1'b1;\n                r_rresp{0} <= 2'b0;\n            end else if( r_rvalid{0} && w_rready{0} ) begin\n                r_rvalid{0} <= 1'b0;\n            end\n", count);
+    st += &format!("            if( r_arready{} && w_arvalid{0} && r_rvalid{0} ) begin\n", count);
+    st += &format!("                r_rvalid{} <= 1'b1;\n                r_rresp{0} <= 2'b0;\n            end else if ( r_rvalid{0} && w_rready{0} ) begin\n                r_rvalid{0} <= 1'b0;\n            end\n", count);
     st += "        end\n    end\n\n";
 
     // rdata generation
@@ -2569,7 +2577,7 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
     st += &format!("            r_rdata{} <= 32'd0; \n        end\n", count);
     st += "        else begin\n";
     st += &format!("            if( w_rdata_en{} ) begin\n", count);
-    st += &format!("                case( w_wraddr[{}:2] )\n", reg_addr_width-1);
+    st += &format!("                case( r_araddr{}[{}:2] )\n", count, reg_addr_width-1);
 
 	// 配列の生成
 	i = -1;
@@ -2898,7 +2906,7 @@ impl AXI_S_IF_Set<AXISLite> for AXISLite {
 	#[allow(non_snake_case)]
 	fn NamedReg(&mut self, name: &str) -> Box<E> {
 		let SelfReg = self.reg_array.clone();
-		for mut x in SelfReg {
+		for x in SelfReg {
 			let Nx = *x.clone();
 			if let E::Ldc(i) = Nx {
 				if i.getName() == name.to_string() {
