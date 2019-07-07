@@ -1,7 +1,6 @@
 ﻿
 use std::ops::*;
 use std::string::String;
-use std::fs::File;
 use std::io::Write;
 use std::fs::OpenOptions;
 
@@ -369,7 +368,7 @@ impl VModule {
         println!("{}",self.code);
     }
 
-    pub fn genFile(&mut self, path: &str) -> Result<(),Box<std::error::Error>> {
+    pub fn genFile(&mut self, path: &str) -> Result<(),Box<std::io::Error>> {
         //let mut file = File::create(path)?;
 		let mut file = OpenOptions::new().write(true).create(true).open(path)?;
         write!(file, "{}", self.code)?;
