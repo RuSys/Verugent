@@ -93,23 +93,31 @@ use Verugent::core::*;
 
 Getting Started
 ========================================
-You can find some examples in this repository.  
-リポジトリ内に作例が置かれていると思います。    
+You can find some examples in "example" directory in this repository.  
+リポジトリ内のexampleフォルダに作例が置かれていると思います。    
 
 Let's use Verugent as an example of LED lighting circuit.  
 この中のLED点灯回路の作例でVerugentを使用してみましょう。    
 
 If you want to know the contents of the LED circuit code written in Rust, Read led.rs file.  
 LED回路のコードが読みたい場合はled.rsを参照してください。  
+
+実行コマンドは、cargo run --example ledです。  
+Execution command is "cargo run --example led".
 ```
     #[macro_use]
-    extern crate Ve_RuGens;
+    extern crate verugent;
 
-    mod led;
+    use verugent::vcore::*;
 
     fn main() {
-        led::led();
+        led();
     }
+	
+	・
+	・
+	・
+
 ```
 If you build and run this code, you can see the output verilog code as a result.  
 コードが実行されたらVerilogコードが出力されます。  
@@ -246,3 +254,4 @@ Update history
 2018/07/27:  Release first product on Github  
 2018/09/15:  FSM function's bugfix  
 2019/04/30:  Add AXI Slave Lite interface generator and code generator
+2019/07/07:  Minor bugfix
