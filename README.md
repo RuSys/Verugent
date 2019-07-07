@@ -76,7 +76,7 @@ use Verugent::core::*;
 
 ```text
 [dependencies]  
-Verugent = "0.1.1"
+Verugent = "0.1.2"
 ```
 
 **2. Declare the use of the core and macro within the block to be used.**  
