@@ -253,5 +253,5 @@ Update history
 2018/06/30:  Add Syntax decomposition and output function  
 2018/07/27:  Release first product on Github  
 2018/09/15:  FSM function's bugfix  
-2019/04/30:  Add AXI Slave Lite interface generator and code generator
+2019/04/30:  Add AXI Slave Lite interface generator and code generator  
 2019/07/07:  Minor bugfix
