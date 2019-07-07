@@ -66,6 +66,7 @@ pub struct VModule {
     Function_AST: Vec<Func_AST>,
     Fsm         : Vec<FsmModule>,
     Axi         : Vec<AXI>,
+	Inline		: String,
 
     // generate code
     code        : String,
@@ -226,6 +227,7 @@ impl VModule {
             Function_AST: Vec::new(),
             Fsm: Vec::new(),
             Axi: Vec::new(),
+			Inline: String::new(),
             
             code: " ".to_string()}
     }
@@ -358,6 +360,10 @@ impl VModule {
             }
         }
 
+		if self.Inline.len() > 0 {
+			st += &self.Inline;
+		}
+
         st += "\nendmodule\n";
         self.code = st.clone();
 
@@ -375,6 +381,12 @@ impl VModule {
         file.flush()?;
         Ok(())
     }
+
+	/// Inline verilog 
+	pub fn Inline(&mut self, code: &str) {
+		self.Inline += code;
+		self.Inline += "\n\n";
+	}
 }
 
 #[allow(non_snake_case)]
