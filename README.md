@@ -255,5 +255,5 @@ Update history
 2018/09/15:  FSM function's bugfix  
 2019/04/30:  Add AXI Slave Lite interface generator and code generator  
 2019/07/07:  Minor bugfix  
-2019/08/31:  Bugfix at AXI-Lite port generator
+2019/08/31:  Bugfix at AXI-Lite port generator  
 2019/09/03:  Adjustment of "Function" generator 
