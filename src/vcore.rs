@@ -342,26 +342,27 @@ impl VModule {
         // Function構文出力コード
         st += &PrintFunction(self.Function_AST.clone());
 
-        st += "\n    // ----Extra Component set----\n\n";
+		if self.Fsm.len() != 0 || self.Axi.len() != 0 || self.Inline.len() != 0{
+			st += "\n    // ----Extra Component set----\n\n";
 
+			// FSMの出力コード
+        	if self.Fsm.clone().len() > 0 {
+            	for tmp in self.Fsm.clone() {
+                	st += &PrintFsm(tmp.clone());
+            	}
+        	}
         
-        // FSMの出力コード
-        if self.Fsm.clone().len() > 0 {
-            for tmp in self.Fsm.clone() {
-                st += &PrintFsm(tmp.clone());
-            }
-        }
-        
-        if self.Axi.clone().len() > 0 {
-            let mut i = -1;
-            for tmp in self.Axi.clone() {
-                i += 1;
-                st += &PrintAXI(tmp.clone(), i);
-            }
-        }
+        	if self.Axi.clone().len() > 0 {
+            	let mut i = -1;
+            	for tmp in self.Axi.clone() {
+                	i += 1;
+                	st += &PrintAXI(tmp.clone(), i);
+            	}
+        	}
 
-		if self.Inline.len() > 0 {
-			st += &self.Inline;
+			if self.Inline.len() > 0 {
+				st += &self.Inline;
+			}
 		}
 
         st += "\nendmodule\n";
@@ -970,6 +971,27 @@ impl Always {
         }
         self.clone()
     }
+
+	/// Case文内のデフォルト追加
+    #[allow(dead_code)]
+    #[allow(non_snake_case)]
+    pub fn Default(&mut self, S: Vec<Box<E>>) -> Always {
+        let c = self.stmt.pop().unwrap();
+        let mut p;
+        let cs = *c;
+        match cs {
+            E::CS(tm) => {
+                p = tm.clone();
+                p.SetCaseS(Box::new(E::Null), S);
+                self.stmt.push(Box::new(E::CS(p)))
+            },
+            _ => {
+                println!("abort");
+                panic!("Not Case");
+            },
+        }
+        self.clone()
+    }
 }
 
 /**
@@ -1003,12 +1025,13 @@ pub struct Func_AST {
   **/
 #[macro_export]
 macro_rules! func_args {
-    ($($x: expr),*) => (
-        let mut temp_vec = Vec::new();
+    ( $($x: expr),* ) => (
+        {let mut temp_vec = Vec::new();
         $(
             temp_vec.push($x.clone());
         )*
         temp_vec
+		}
     )
 }
 
@@ -1028,7 +1051,7 @@ impl Func_AST {
     /// debug:構文生成
     #[allow(dead_code)]
     #[allow(non_snake_case)]
-    fn func(&mut self, args: Vec<Box<E>>) -> Box<E> {
+    pub fn using(&mut self, args: Vec<Box<E>>) -> Box<E> {
         let tmp = Box::new(E::Func(self.top.clone(), args));
         tmp.clone()
     }
@@ -1132,6 +1155,7 @@ impl Func_AST {
             },
             _ => {
                 println!("abort");
+				panic!("Not Case");
             },
         }
         self.clone()
@@ -1390,6 +1414,7 @@ pub enum E {
     BL(Vec<IfStmt_AST>),            // if, else if, else文
     Func(Box<E>, Vec<Box<E>>),      // function文
     MEM(Box<E>,Box<E>),             // メモリ
+	MBT(Box<E>,Box<E>,Box<E>),		// 多ビット
     Node(String),                   // 内部検索用
 }
 
@@ -1528,6 +1553,12 @@ fn _LSH<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
 #[allow(non_snake_case)]
 fn _RSH<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("rshift".to_string(), L.into(), R.into()))
+}
+
+/// ">>>" right arithmetic shift
+#[allow(non_snake_case)]
+pub fn _RSHA<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
+    Box::new(E::Bin("rshifta".to_string(), L.into(), R.into()))
 }
 
 /// "<" more than
@@ -1931,6 +1962,20 @@ where
     }
 }
 
+// レジスタ用多ビット指定
+pub trait MBit<Rs = Self> {
+    fn range(&self, hbit: Rs, lbit: Rs) ->Box<E>;
+}
+
+impl<T> MBit<T> for Box<E>
+where
+    T: Into<Box<E>>,
+{
+    fn range(&self, hbit: T, lbit: T) -> Box<E> {
+        Box::new(E::MBT(self.clone(), hbit.into(), lbit.into()))
+    }
+}
+
 /**
   * 出力、分解、デバッグ関数
   * 出力関数以外はデバッグ用関数のため削除しても問題はない
@@ -1961,32 +2006,34 @@ fn DeconpAST(Parenthesis: bool, ast: Box<E>, cnfg: &str, indent: i32) -> String{
             let mut pareset = false;
             st += &DeconpAST(false ,l.clone(),cnfg, 0);
             match tmp.clone() {
-                "add" => {st += "+"},
-                "sub" => {st += "-"},
+                "add" => {st += "+";},
+                "sub" => {st += "-";},
                 "mul" => {st += "*"; pareset = true},
                 "div" => {st += "/"; pareset = true},
                 "mod" => {st += "%"; pareset = true},
-                "or"  => {st += "|"},
-                "and" => {st += "&"; pareset = true},
-                "lor"  => {st += "||"},
-                "land" => {st += "&&"; pareset = true},
-                "lshift" => {st += "<<"},
-                "rshift" => {st += ">>"},
-                "equal" => {st += "=="},
-                "Not equal" => {st += "!="},
-                "more_than" => {st += "<"},
-                "less_than" => {st += ">"},
-                "or_more" => {st += "<="},
-                "or_less" => {st += ">="},
-                _ => panic!("No correspond syntax"),
+                "or"  => {st += "|";},
+                "and" => {st += "&";},
+				"xor" => {st += "^";},
+                "lor"  => {st += "||";},
+                "land" => {st += "&&";},
+                "lshift" => {st += "<<";},
+                "rshift" => {st += ">>";},
+				"rshifta" => {st += ">>>";},
+                "equal" => {st += "==";},
+                "Not equal" => {st += "!=";},
+                "more_than" => {st += "<";},
+                "less_than" => {st += ">";},
+                "or_more" => {st += "<=";},
+                "or_less" => {st += ">=";},
+                _ => panic!("No correspond syntax : error operator -- {}", tmp),
             }
             st += &DeconpAST(pareset, r.clone(),cnfg, 0);
             if Parenthesis {
                 match tmp {
-                    "add" => {st += ")"},
-                    "sub" => {st += ")"},
-                    "or" => {st += ")"},
-                    "lor" => {st += ")"},
+                    "add" => {st += ")";},
+                    "sub" => {st += ")";},
+                    "or" => {st += ")";},
+                    "lor" => {st += ")";},
                     _ => {st += "";},
                 }
             }
@@ -2036,6 +2083,30 @@ fn DeconpAST(Parenthesis: bool, ast: Box<E>, cnfg: &str, indent: i32) -> String{
             st += &DeconpAST(false, aa.clone(),cnfg, 0);
             st += &format!("]");
         }
+		E::MBT(ref m, ref a, ref b) => {
+			let mn = &*m;
+			let aa = &*a;
+			let bb = &*b;
+			st += &DeconpAST(false, mn.clone(),cnfg, indent);
+			st += &format!("[");
+            st += &DeconpAST(false, aa.clone(),cnfg, 0);
+			st += &format!(":");
+			st += &DeconpAST(false, bb.clone(),cnfg, 0);
+            st += &format!("]");
+		}
+		E::Func(ref a, ref v) => {
+			st += &DeconpAST(false, a.clone(), cnfg, 0);
+			st += &format!("(");
+			let mut i: usize = 0;
+			for x in v.clone() {
+				st += &DeconpAST(false, x.clone(), cnfg, 0);
+				i += 1;
+				if v.len() != i {
+					st += &format!(", ");
+				}
+			}
+			st += &format!(")");
+		},
         E::No(ref b) => {
             let bb = &*b;
             st += "~";
@@ -2159,6 +2230,9 @@ fn PrintPort(Port: Vec<wrVar>) -> String {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 fn PrintLocal(PWR: Vec<wrVar>) -> String {
+	if PWR.len() == 0 {
+		return String::new();
+	}
     let mut st = String::new();
     st += "    // ----Generate local parts----\n\n";
     let tmp = PWR;
@@ -2208,6 +2282,9 @@ fn PrintLocal(PWR: Vec<wrVar>) -> String {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 fn PrintAssign(Assign: Vec<Assign>) -> String {
+	if Assign.len() == 0 {
+		return String::new();
+	}
     let mut st = String::new();
     st += "\n    // ----Generate assign compornent----\n\n";
     let tmp = Assign;
@@ -2228,6 +2305,9 @@ fn PrintAssign(Assign: Vec<Assign>) -> String {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 fn PrintAlways(Always: Vec<Always>) -> String {
+	if Always.len() == 0 {
+		return String::new();
+	}
     let mut st = String::new();
     st += "\n    // ----Generate Always block----\n\n";
     let tmp = Always.clone();
@@ -2269,8 +2349,11 @@ fn PrintAlways(Always: Vec<Always>) -> String {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 fn PrintFunction(Function: Vec<Func_AST>) -> String {
+	if Function.len() == 0 {
+		return String::new();
+	}
     let mut st = String::new();
-    st += "\n    // ----Generate Function block----\n\n";
+    st += "\n    // ----Generate Function block----\n";
 
     let tmp = Function.clone();
     for x in tmp {
@@ -2572,17 +2655,17 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
     st += "        end else begin\n";
     
     st += &format!("            if( r_awready{} && w_awvalid{0} && ~r_bvalid{0} && r_wready{0} && w_wvalid{0} ) begin\n", count);
-    st += &format!("                r_bvalid{0} <= 1'b1;\n                r_bresp{0} <= 2'b1;\n            end else if( w_bready{0} && r_bvalid{0} ) begin\n                r_bvalid{0} <= 1'b0;\n            end\n\n",count);
+    st += &format!("                r_bvalid{} <= 1'b1;\n                r_bresp{0} <= 2'b0;\n            end else if( w_bready{0} && r_bvalid{0} ) begin\n                r_bvalid{0} <= 1'b0;\n            end\n\n",count);
 
     st += &format!("            if( ~r_arready{} && w_arvalid{0} ) begin\n", count);
-    st += &format!("                r_arready{0} <= 1'b1;\n                r_araddr{0} <= i_S_ARADDR{0};\n            end else begin\n                r_arready{0} <= 1'b0;\n            end\n", count);
+    st += &format!("                r_arready{} <= 1'b1;\n                r_araddr{0} <= i_S_ARADDR{0};\n            end else begin\n                r_arready{0} <= 1'b0;\n            end\n", count);
 
-    st += &format!("            if( r_arready{} && w_arvalid{0} && r_rvalid{0} ) begin\n", count);
+    st += &format!("            if( r_arready{} && w_arvalid{0} && ~r_rvalid{0} ) begin\n", count);
     st += &format!("                r_rvalid{} <= 1'b1;\n                r_rresp{0} <= 2'b0;\n            end else if ( r_rvalid{0} && w_rready{0} ) begin\n                r_rvalid{0} <= 1'b0;\n            end\n", count);
     st += "        end\n    end\n\n";
 
     // rdata generation
-    st += &format!("    assign w_rdata_en{} = r_arready{0} && w_arvalid{0} && r_rvalid{0};\n\n", count);
+    st += &format!("    assign w_rdata_en{} = r_arready{0} && w_arvalid{0} && ~r_rvalid{0};\n\n", count);
     st += &format!("    always @( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
     st += &format!("        if( {} ) begin\n", _StrOut(tmp.clone().rst));
     st += &format!("            r_rdata{} <= 32'd0; \n        end\n", count);
