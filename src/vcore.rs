@@ -2361,23 +2361,26 @@ fn PrintFunction(Function: Vec<Func_AST>) -> String {
         if let E::Ldc(wrtop) = (*e).clone() {
             st += &format!("\n    function [{}:0] ", wrtop.getWidth()-1);
             st += &DeconpAST(false, e, "", 1);
-            st += ";\n";
         }
-        for inpt in x.input {
-            let i = inpt.clone();
-            if let E::Ldc(wr) = (*i).clone() {
+		st += "(\n";
+        for inpt in x.input.clone() {
+            let mut i = 0;
+            if let E::Ldc(wr) = (*inpt).clone() {
                 if wr.getWidth() > 0 {
                     st += &format!("        input [{}:0]", wr.getWidth()-1);
-                    st += &DeconpAST(false, i, "",2);
-                    st += ";\n";
+                    st += &DeconpAST(false, inpt, "",2);
                 }
                 else {
-                    st += "        input \n";
-                    st += &DeconpAST(false, i, "", 2);
-                    st += ";\n";
+                    st += "        input ";
+                    st += &DeconpAST(false, inpt, "", 2);
                 }
+				i += 1;
+				if i != x.input.len() {
+					st += ",\n";
+				}
             }
         }
+		st += "\n    );\n";
         for s in x.stmt {
             st += &DeconpAST(false, s, "", 2);
         }
