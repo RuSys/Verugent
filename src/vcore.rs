@@ -2363,8 +2363,8 @@ fn PrintFunction(Function: Vec<Func_AST>) -> String {
             st += &DeconpAST(false, e, "", 1);
         }
 		st += "(\n";
+		let mut i = 0;
         for inpt in x.input.clone() {
-            let mut i = 0;
             if let E::Ldc(wr) = (*inpt).clone() {
                 if wr.getWidth() > 0 {
                     st += &format!("        input [{}:0]", wr.getWidth()-1);
