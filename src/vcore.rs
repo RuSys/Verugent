@@ -2642,9 +2642,9 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
 	for x in write_tmp.clone() {
 		i += 1;
 		if let E::Null = *(x.0.clone()) {continue;}
-        st += &format!("\n            if( {} ) begin \n", _StrOut(x.0));
+        st += &format!("\n            if( {} ) begin \n", &DeconpAST(false, x.0, "", 0));
         st += &format!("                    {} <= {};\n",
-            _StrOut(reg_tmp[i as usize].clone()), _StrOut(x.1));
+            _StrOut(reg_tmp[i as usize].clone()), &DeconpAST(false, x.1, "", 0));
         st += "            end\n";
 	}
     st += "        end\n    end\n\n";
