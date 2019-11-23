@@ -1,4 +1,5 @@
-﻿
+﻿#![allow(dead_code)]
+#![allow(non_snake_case)]
 use std::ops::*;
 use std::string::String;
 use std::io::Write;
@@ -53,8 +54,6 @@ macro_rules! F {
   * Verilogモジュールクラス
   * すべてのASTの統合構造体
   **/
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 #[derive(Clone,Debug)]
 pub struct VModule {
     Module_Name : String,
@@ -74,8 +73,6 @@ pub struct VModule {
 
 /*
 /// 入出力ポート、内部配線用Trait
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 impl VModule{
     /// input の追加
     pub fn Input(&mut self, name: &str) -> Box<E> {
@@ -128,7 +125,6 @@ impl VModule{
 */
 
 /// 入出力ポート、内部配線用Trait
-#[allow(non_snake_case)]
 pub trait Vset<T> {
     fn Input(&mut self, name: &str, Width: T) -> Box<E>;
     fn Inout(&mut self, name: &str, Width: T) -> Box<E>;
@@ -139,8 +135,6 @@ pub trait Vset<T> {
 }
 
 /// 入力幅：Box<E>
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 impl<T> Vset<T> for VModule
 where
     T: Into<Box<E>>,
@@ -212,11 +206,8 @@ where
     }
 }
 
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 impl VModule {
     /// モジュールの生成
-    #[allow(non_snake_case)]
     pub fn new(Name: &str) -> VModule {
         VModule{Module_Name: Name.to_string(), 
             IO_Port: Vec::new(),
@@ -249,15 +240,11 @@ impl VModule {
     }
 
     /// Debug: モジュール名の取得
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     fn getName(&mut self) -> String {
         self.Module_Name.clone()
     }
 
     /// always 構文ブロックの追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn Always(&mut self, AST_of_Always: Always) {
         let tmp = AST_of_Always;
         self.Always_AST.push(tmp.clone());
@@ -265,26 +252,30 @@ impl VModule {
     }
 
     /// assign 構文 AST の追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn Assign(&mut self, AST_of_Assign: Assign) {
         let tmp = AST_of_Assign;
         self.Assign_AST.push(tmp.clone());
         return;
     }
 
+	/*
     /// function 構文ブロックの追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn Function(&mut self, AST_of_Function: Func_AST) {
         let tmp = AST_of_Function;
         self.Function_AST.push(tmp.clone());
-    }
+	}
+	*/
 
+	/*
     /// FSM AST 構文ブロック群を追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn FSM(&mut self, fsm: FsmModule) -> Box<E> {
+		let self_fsm = self.Fsm.clone();
+		for n in self_fsm {
+			if _StrOut(n.clone().fsm) == _StrOut(fsm.clone().fsm) {
+				panic!("Some name FSM exist. :{}\n", _StrOut(fsm.clone().fsm))
+			}
+		}
+		
         let tmp = fsm.clone();
         let mut stmt = fsm.StateOut();
         let state = *(tmp.clone().StateReg());
@@ -307,18 +298,17 @@ impl VModule {
             p = x.clone();
             let nam = p.getName() + "_Next";
             if let E::Ldc(wr) = *wrVar::new().Reg(&nam, 32) {np = wr;}
-            }
+        }
         else {return Box::new(E::Null);}
         self.Local.push(p);
         self.Local.push(np);
         self.Fsm.push(tmp.clone());
 
         return tmp.StateReg();
-    }
+	}
+	*/
 
     /// モジュールの AST 解析と Verilog 構文の出力
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn endmodule(&mut self) -> String {
         let mut st = String::new();
         //print!("module {} ",self.getName());
@@ -343,7 +333,7 @@ impl VModule {
         st += &PrintFunction(self.Function_AST.clone());
 
 		if self.Fsm.len() != 0 || self.Axi.len() != 0 || self.Inline.len() != 0{
-			st += "\n    // ----Extra Component set----\n\n";
+			st += "\n    // ----Extra Component Set----\n\n";
 
 			// FSMの出力コード
         	if self.Fsm.clone().len() > 0 {
@@ -390,13 +380,122 @@ impl VModule {
 	}
 }
 
-#[allow(non_snake_case)]
+/// function 構文ブロック追加用トレイト
+#[allow(non_camel_case_types)]
+pub trait Func_trait<T> {
+	fn Function(&mut self, AST_of_Function: T);
+}
+
+#[allow(non_camel_case_types)]
+impl Func_trait<Func_AST> for VModule {
+	fn Function(&mut self, AST_of_Function: Func_AST) {
+		self.Function_AST.push(AST_of_Function);
+	}
+}
+
+#[allow(non_camel_case_types)]
+impl Func_trait<&Func_AST> for VModule {
+	fn Function(&mut self, AST_of_Function: &Func_AST) {
+		self.Function_AST.push(AST_of_Function.clone());
+	}
+}
+
+/// FSM 構文ブロック追加用トレイト
+#[allow(non_camel_case_types)]
+pub trait FSM_trait<T> {
+	fn FSM(&mut self, fsm: T) -> Box<E>;
+}
+
+#[allow(non_camel_case_types)]
+impl FSM_trait<FsmModule> for VModule {
+	fn FSM(&mut self, fsm: FsmModule) -> Box<E> {
+		let self_fsm = self.Fsm.clone();
+		for n in self_fsm {
+			if _StrOut(n.clone().fsm) == _StrOut(fsm.clone().fsm) {
+				panic!("Some name FSM exist. :{}\n", _StrOut(fsm.clone().fsm))
+			}
+		}
+		
+        let tmp = fsm.clone();
+        let mut stmt = fsm.StateOut();
+        let state = *(tmp.clone().StateReg());
+        let p;
+        let mut np = wrVar::new();
+        let mut n = 0;
+        for ss in &mut stmt {
+            self.Local.push(wrVar{name: ss.getStateName(), 
+                            io_param: io_p::param_, 
+                            width: 0, 
+                            length: 0, 
+                            reg_set: false, 
+                            value: n, 
+                            width_p: "_".to_string(), 
+                            length_p: "_".to_string()});
+            n+=1;
+        }
+
+        if let E::Ldc(x) = state {
+            p = x.clone();
+            let nam = p.getName() + "_Next";
+            if let E::Ldc(wr) = *wrVar::new().Reg(&nam, 32) {np = wr;}
+        }
+        else {return Box::new(E::Null);}
+        self.Local.push(p);
+        self.Local.push(np);
+        self.Fsm.push(tmp.clone());
+
+        return tmp.StateReg();
+    }
+}
+
+#[allow(non_camel_case_types)]
+impl FSM_trait<&FsmModule> for VModule {
+	fn FSM(&mut self, fsm: &FsmModule) -> Box<E> {
+		let self_fsm = self.Fsm.clone();
+		for n in self_fsm {
+			if _StrOut(n.clone().fsm) == _StrOut(fsm.clone().fsm) {
+				panic!("Some name FSM exist. :{}\n", _StrOut(fsm.clone().fsm))
+			}
+		}
+		
+		let tmp = fsm.clone();
+		let retE = fsm.clone().StateReg();
+        let mut stmt = fsm.clone().StateOut();
+        let state = *(tmp.clone().StateReg());
+        let p;
+        let mut np = wrVar::new();
+        let mut n = 0;
+        for ss in &mut stmt {
+            self.Local.push(wrVar{name: ss.getStateName(), 
+                            io_param: io_p::param_, 
+                            width: 0, 
+                            length: 0, 
+                            reg_set: false, 
+                            value: n, 
+                            width_p: "_".to_string(), 
+                            length_p: "_".to_string()});
+            n+=1;
+        }
+
+        if let E::Ldc(x) = state {
+            p = x.clone();
+            let nam = p.getName() + "_Next";
+            if let E::Ldc(wr) = *wrVar::new().Reg(&nam, 32) {np = wr;}
+        }
+        else {return Box::new(E::Null);}
+        self.Local.push(p);
+        self.Local.push(np);
+        self.Fsm.push(tmp);
+
+        return retE;
+    }
+}
+
 #[allow(non_camel_case_types)]
 pub trait AXI_trait<T> {
     fn AXI(&mut self, setAXI: T);
 }
 
-#[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
 impl AXI_trait<AXISLite> for VModule {
     fn AXI(&mut self, setAXI: AXISLite) {
@@ -500,7 +599,6 @@ impl AXI_trait<AXISLite> for VModule {
 
 
 /// メモリレジスタ生成用のトレイト
-#[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
 pub trait Memset<T> {
     fn Mem(&mut self, name: &str, args: T) -> Box<E>;
@@ -513,7 +611,6 @@ where
     U: Into<Box<E>>,
 {
     /// メモリ構文
-    #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
     fn Mem(&mut self, name: &str, args: (T, U)) -> Box<E> {
         let mut tmp = wrVar::new();
@@ -544,7 +641,6 @@ pub enum io_p {
   * 入出力パラメータクラス
   * 
   **/
-#[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[derive(Clone, Debug)]
 pub struct wrVar {
@@ -570,69 +666,58 @@ impl wrVar {
     }
 
     /// データ取得メソッド:name
-    #[allow(non_snake_case)]
     pub fn getName(&self) -> String {
         self.name.clone()
     }
 
     /// データ取得メソッド:io_param
-    #[allow(non_snake_case)]
     pub fn getIO(&self) -> io_p {
         self.io_param.clone()
     }
 
     /// データ取得メソッド:width
-    #[allow(non_snake_case)]
     pub fn getWidth(&self) -> i32 {
         self.width.clone()
     }
 
     /// データ取得メソッド:length
-    #[allow(non_snake_case)]
     pub fn getLength(&self) -> i32 {
         self.length.clone()
     }
 
     /// データ取得メソッド:reg_set
-    #[allow(non_snake_case)]
     pub fn getReg(&self) -> bool {
         self.reg_set.clone()
     }
 
     /// データ取得メソッド:value
-    #[allow(non_snake_case)]
     pub fn getValue(&self) -> i32 {
         self.value.clone()
     }
 
     /// データ取得メソッド:width_p
-    #[allow(non_snake_case)]
     pub fn getWP(&self) -> String {
         self.width_p.clone()
     }
 
     /// データ取得メソッド:length_p
-    #[allow(non_snake_case)]
     pub fn getLP(&self) -> String {
         self.length_p.clone()
     }
 
     /// パラメータによる長さ設定メソッド
-    #[allow(non_snake_case)]
     pub fn Length(&mut self, S: &str) -> wrVar {
         self.length_p = S.to_string();
         self.clone()
     }
 
     /// パラメータによる幅設定メソッド
-    #[allow(non_snake_case)]
     pub fn Width(&mut self, S: &str) -> wrVar {
         self.width_p = S.to_string();
         self.clone()
     }
 
     /// パラメータ設定メソッド:input
-    #[allow(non_snake_case)]
     pub fn Input(&mut self, Name: &str, Width: i32) -> Box<E> {
         self.name = Name.to_string();
         self.width = Width;
@@ -642,7 +727,6 @@ impl wrVar {
     }
 
     /// パラメータ設定メソッド:output
-    #[allow(non_snake_case)]
     pub fn Output(&mut self, Name: &str, Width: i32) -> Box<E> {
         self.name = Name.to_string();
         self.width = Width;
@@ -652,7 +736,6 @@ impl wrVar {
     }
 
     /// パラメータ設定メソッド:inout
-    #[allow(non_snake_case)]
     pub fn Inout(&mut self, Name: &str, Width: i32) -> Box<E> {
         self.name = Name.to_string();
         self.width = Width;
@@ -662,7 +745,6 @@ impl wrVar {
     }
 
     /// パラメータ設定メソッド:output(register)
-    #[allow(non_snake_case)]
     pub fn OutputReg(&mut self, Name: &str, Width: i32) -> Box<E> {
         self.name = Name.to_string();
 
@@ -673,7 +755,6 @@ impl wrVar {
     }
 
     /// パラメータ設定メソッド:parameter
-    #[allow(non_snake_case)]
     pub fn Parameter(&mut self, Name: &str, Value: i32) -> Box<E> {
         self.name = Name.to_string();
         self.value = Value;
@@ -683,7 +764,6 @@ impl wrVar {
     }
 
     /// パラメータ設定メソッド:wire
-    #[allow(non_snake_case)]
     pub fn Wire(&mut self, Name: &str, Width: i32) -> Box<E> {
         self.name = Name.to_string();
         self.width = Width;
@@ -692,7 +772,6 @@ impl wrVar {
     }
 
     /// パラメータ設定メソッド:reg
-    #[allow(non_snake_case)]
     pub fn Reg(&mut self, Name: &str, Width: i32) -> Box<E> {
         self.name = Name.to_string();
         self.width = Width;
@@ -702,7 +781,6 @@ impl wrVar {
     }
 
     /// パラメータ設定メソッド:reg[ length : 0 ]
-    #[allow(non_snake_case)]
     pub fn Mem(&mut self, Name: &str, Width: i32, Lenght: i32) -> Box<E> {
         self.name = Name.to_string();
         self.width = Width;
@@ -714,7 +792,6 @@ impl wrVar {
 }
 
 /// Assign 構文代入用トレイト
-#[allow(non_snake_case)]
 pub trait SetEqual<T>
 where
     T: Into<Box<E>>,
@@ -730,13 +807,11 @@ where
     T: Into<Box<E>>,
 {
     /// Box<E>からAssign生成を行うメソッド
-    #[allow(non_snake_case)]
     fn _e(&self, RHS: T) -> Assign {
         let mut tmp = Assign::new();
         tmp.L(self).R(&RHS.into())
     }
 
-    #[allow(non_snake_case)]
     fn _ve(&self, RHS: T) -> Assign {
         let mut tmp = Assign::new();
         tmp.L(self).R(&RHS.into())
@@ -747,7 +822,6 @@ where
   * assign構文用AST構造体
   * 
   **/
-#[allow(dead_code)]
 #[derive(Clone,Debug)]
 pub struct Assign {
     lhs     : Box<E>,
@@ -765,7 +839,6 @@ impl Assign {
     }
 
     /// 左辺設定メソッド
-    #[allow(non_snake_case)]
     pub fn L<T: Into<Box<E>>>(&mut self, LHS: T) -> Assign {
         self.lhs = LHS.into();
         let tmp = self.clone();
@@ -773,7 +846,6 @@ impl Assign {
     }
 
     /// 右辺設定メソッド
-    #[allow(non_snake_case)]
     pub fn R<T: Into<Box<E>>>(&mut self, RHS: T) -> Assign {
         self.rhs = RHS.into();
         let tmp = self.clone();
@@ -781,13 +853,11 @@ impl Assign {
     }
 
     /// 左辺出力メソッド
-    #[allow(non_snake_case)]
     pub fn LOut(&mut self) -> Box<E> {
         self.lhs.clone()
     }
 
     /// 右辺出力メソッド
-    #[allow(non_snake_case)]
     pub fn ROut(&mut self) -> Box<E> {
         self.rhs.clone()
     }
@@ -797,8 +867,6 @@ impl Assign {
   * Always構文用AST構造体
   * 
   **/
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 #[derive(Clone,Debug)]
 pub struct Always{
     br      : String,
@@ -808,8 +876,6 @@ pub struct Always{
 }
 
 /// Always構文内使用の立ち上がり信号設定構文
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 pub fn Posedge<T: Into<Box<E>>>(edge: T) -> Always {
     let e = *edge.into();
     let mut tmp = Always{br: "brock".to_string(), stmt: Vec::new(), P_edge: Vec::new(), N_edge: Vec::new()};
@@ -821,8 +887,6 @@ pub fn Posedge<T: Into<Box<E>>>(edge: T) -> Always {
 }
 
 /// Always構文内使用の立ち下り信号設定構文
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 pub fn Negedge<T: Into<Box<E>>>(edge: T) -> Always {
     let e = *edge.into();
     let mut tmp = Always{br: "brock".to_string(), stmt: Vec::new(), P_edge: Vec::new(), N_edge: Vec::new()};
@@ -834,8 +898,6 @@ pub fn Negedge<T: Into<Box<E>>>(edge: T) -> Always {
 }
 
 /// Always構文内使用の信号未設定構文
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 pub fn Nonedge() -> Always {
     Always{br: "brock".to_string(), stmt: Vec::new(), P_edge: Vec::new(), N_edge: Vec::new()}
 }
@@ -846,8 +908,6 @@ pub fn Nonedge() -> Always {
   **/
 impl Always {
     // Debug
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn new() -> Always {
         Always{br: "brock".to_string(), stmt: Vec::new(), P_edge: Vec::new(), N_edge: Vec::new()}
     }
@@ -858,24 +918,18 @@ impl Always {
     }
 
     /// ブロッキング設定
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn block(&mut self)-> Always {
         self.br = "brock".to_string();
         self.clone()
     }
 
     /// ノンブロッキング設定
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn non(&mut self)-> Always {
         self.br = "Non".to_string();
         self.clone()
     }
 
     /// 立ち上がり信号設定
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn Posedge<T: Into<Box<E>>>(&mut self, edge: T) -> Always {
         let e = *edge.into();
         match e {
@@ -886,8 +940,6 @@ impl Always {
     }
 
     /// 立ち下がり信号設定
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn Negedge<T: Into<Box<E>>>(&mut self, edge: T) -> Always {
         let e = *edge.into();
         match e {
@@ -898,8 +950,6 @@ impl Always {
     }
 
     /// 分岐 if 構文追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn If<T: Into<Box<E>>>(&mut self, C: T, S: Vec<Box<E>>) -> Always {
         let i = If(C.into(), S);
         self.stmt.push(i);
@@ -907,8 +957,6 @@ impl Always {
     }
 
     /// 分岐 else if 構文追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn Else_If<T: Into<Box<E>>>(&mut self, C: T, S: Vec<Box<E>>) -> Always {
         let n = self.stmt.pop().unwrap();
         let mut p;
@@ -925,8 +973,6 @@ impl Always {
     }
 
     /// 分岐 else 構文追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn Else(&mut self, S: Vec<Box<E>>) -> Always {
         let n = self.stmt.pop().unwrap();
         let mut p;
@@ -943,8 +989,6 @@ impl Always {
     }
 
     /// Case文追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn Case<T: Into<Box<E>>>(&mut self, Sel: T) -> Always {
         let c = Case(Sel.into());
         self.stmt.push(c);
@@ -952,8 +996,6 @@ impl Always {
     }
 
     /// Case文内の分岐追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn S<T: Into<Box<E>>>(&mut self, C: T, S: Vec<Box<E>>) -> Always {
         let c = self.stmt.pop().unwrap();
         let mut p;
@@ -973,8 +1015,6 @@ impl Always {
     }
 
 	/// Case文内のデフォルト追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn Default(&mut self, S: Vec<Box<E>>) -> Always {
         let c = self.stmt.pop().unwrap();
         let mut p;
@@ -998,8 +1038,6 @@ impl Always {
   * function生成用関数
   *
   **/ 
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
 pub fn func(name: &str, width: i32) -> Func_AST {
     Func_AST{top: wrVar::new().Wire(name, width), input: Vec::new(), stmt: Vec::new()}
@@ -1009,8 +1047,6 @@ pub fn func(name: &str, width: i32) -> Func_AST {
   * function構文用AST構造体
   * 
   **/
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
 #[derive(Clone,Debug)]
 pub struct Func_AST {
@@ -1039,26 +1075,19 @@ macro_rules! func_args {
   * function構文用ASTメソッド
   * 
   **/
-#[allow(non_snake_case)]
 impl Func_AST {
     /// Functionのトップ文字列を格納したAST取得
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn own(&mut self) -> Box<E> {
         self.top.clone()
     }
 
     /// debug:構文生成
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn using(&mut self, args: Vec<Box<E>>) -> Box<E> {
         let tmp = Box::new(E::Func(self.top.clone(), args));
         tmp.clone()
     }
 
     /// 入力の追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn Input(&mut self, Name: &str, Width: i32) -> Box<E> {
         let mut tmp = wrVar::new();
         let port = tmp.Input(Name, Width);
@@ -1067,8 +1096,6 @@ impl Func_AST {
     }
 
     /// 分岐 if 構文追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn If<T: Into<Box<E>>>(&mut self, C: T, S: Vec<Box<E>>) -> Func_AST {
         let i = If(C.into(), S);
         self.stmt.push(i);
@@ -1076,8 +1103,6 @@ impl Func_AST {
     }
 
     /// 分岐 else if 構文追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn Else_If<T: Into<Box<E>>>(&mut self, C: T, S: Vec<Box<E>>) -> Func_AST {
         let n = self.stmt.pop().unwrap();
         let mut p;
@@ -1094,8 +1119,6 @@ impl Func_AST {
     }
 
     /// 分岐 else 構文追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn Else(&mut self, S: Vec<Box<E>>) -> Func_AST {
         let n = self.stmt.pop().unwrap();
         let mut p;
@@ -1112,8 +1135,6 @@ impl Func_AST {
     }
 
     /// Case 文追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn Case<T: Into<Box<E>>>(&mut self, Sel: T) -> Func_AST {
         let c = Case(Sel.into());
         self.stmt.push(c);
@@ -1121,8 +1142,6 @@ impl Func_AST {
     }
 
     /// Case 文内の分岐追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn S<T: Into<Box<E>>>(&mut self, C: T, S: Vec<Box<E>>) -> Func_AST {
         let c = self.stmt.pop().unwrap();
         let mut p;
@@ -1141,8 +1160,6 @@ impl Func_AST {
     }
 
     /// Case 文のデフォルト追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn Default(&mut self, S: Vec<Box<E>>) -> Func_AST {
         let c = self.stmt.pop().unwrap();
         let mut p;
@@ -1166,8 +1183,6 @@ impl Func_AST {
   * if,else if,else構造体
   * 
   **/
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
 #[derive(Clone,Debug)]
 pub struct IfStmt_AST {
@@ -1176,7 +1191,6 @@ pub struct IfStmt_AST {
     ST      : Vec<Box<E>>,  // 実行式
 }
 
-#[allow(non_snake_case)]
 impl IfStmt_AST {
     fn getIfFlag(&mut self) -> bool {
         self.If_.clone()
@@ -1192,8 +1206,6 @@ impl IfStmt_AST {
 }
 
 /// ステートメントブロック内のif構文作成
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
 pub fn If<T: Into<Box<E>>>(C: T, S: Vec<Box<E>>) -> Box<E> {
     let mut i = Vec::new();
@@ -1202,21 +1214,17 @@ pub fn If<T: Into<Box<E>>>(C: T, S: Vec<Box<E>>) -> Box<E> {
 }
 
 /// ステートメントブロック内のif分岐追加
-#[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
 pub trait Ifset {
-    #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
     fn Else_If<T: Into<Box<E>>>(self, C: T, S: Vec<Box<E>>) -> Box<E>;
 
-    #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
     fn Else(self, S: Vec<Box<E>>) -> Box<E>;
 }
 
 
 impl Ifset for Box<E> {
-    #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
     fn Else_If<T: Into<Box<E>>>(self, C: T, S: Vec<Box<E>>) -> Box<E> {
         let e = *self;
@@ -1231,7 +1239,6 @@ impl Ifset for Box<E> {
         return Box::new(E::BL(p));
     }
 
-    #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
     fn Else(self, S: Vec<Box<E>>) -> Box<E> {
         let e = *self;
@@ -1251,8 +1258,6 @@ impl Ifset for Box<E> {
   * Case構造体
   * 
   **/
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
 #[derive(Clone,Debug)]
 pub struct CaseStmt_AST {
@@ -1261,34 +1266,24 @@ pub struct CaseStmt_AST {
 }
 
 impl CaseStmt_AST {
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn SetCaseV(&mut self, V: wrVar) {
         self.CaseVar = V.clone()
     }
 
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn SetCaseS<T: Into<Box<E>>>(&mut self, Cond: T, Stmt: Vec<Box<E>>) {
         self.Select.push(Case_{CaseT: Cond.into(), CaseS: Stmt})
     }
 
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn getCaseV(&mut self) -> wrVar {
         self.CaseVar.clone()
     }
 
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn getSelect(&mut self) -> Vec<Case_> {
         self.Select.clone()
     }
 }
 
 // ステートメントブロック内のcase文作成
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
 fn Case<T: Into<Box<E>>>(Sel: T) -> Box<E> {
     let e = *Sel.into();
@@ -1306,22 +1301,17 @@ fn Case<T: Into<Box<E>>>(Sel: T) -> Box<E> {
 }
 
 // ステートメントブロック内のcase分岐追加
-#[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
 pub trait Caseset {
-    #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
     fn S<T: Into<Box<E>>>(self, C: T, S: Vec<Box<E>>) -> Box<E>;
 
-    #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
     fn Default(self, S: Vec<Box<E>>) -> Box<E>;
 }
 
-#[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
 impl Caseset for Box<E> {
-    #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
     fn S<T: Into<Box<E>>>(self, C: T, S: Vec<Box<E>>) -> Box<E> {
         let e = *self;
@@ -1336,7 +1326,6 @@ impl Caseset for Box<E> {
         Box::new(E::CS(n))
     }
 
-    #[allow(non_snake_case)]
     #[allow(non_camel_case_types)]
     fn Default(self, S: Vec<Box<E>>) -> Box<E> {
         let e = *self;
@@ -1357,8 +1346,6 @@ impl Caseset for Box<E> {
   *　Caseの各条件における内部構造体
   * 
   **/
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 #[derive(Clone,Debug)]
 pub struct Case_ {
     pub CaseT   : Box<E>,
@@ -1366,8 +1353,6 @@ pub struct Case_ {
 }
 
 /// ステートメントブロック用ベクタ_ブロック作成 & 式追加
-#[allow(non_snake_case)]
-#[allow(dead_code)]
 pub fn Form<T: Into<Box<E>>>(formu: T) -> Vec<Box<E>> {
     let mut tmp = Vec::new();
     tmp.push(formu.into());
@@ -1375,7 +1360,6 @@ pub fn Form<T: Into<Box<E>>>(formu: T) -> Vec<Box<E>> {
 }
 
 /// ステートメントブロック内の式追加
-#[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
 pub trait addForm<T>
 where
@@ -1399,7 +1383,6 @@ where
   * 各構文用列挙型構造体
   * 
   **/
-#[allow(non_snake_case)]
 #[derive(Clone,Debug)]
 pub enum E {
     Null,
@@ -1443,25 +1426,21 @@ impl From<&i32> for Box<E> {
 }
 
 // 変数出力関数
-#[allow(non_snake_case)]
 fn _V(V: wrVar) -> Box<E>{
     Box::new(E::Ldc(V))
 }
 
 // 数値出力関数
-#[allow(non_snake_case)]
 pub fn _Num(num: i32) -> Box<E>{
     Box::new(E::Num(num))
 }
 
 // 代入演算関数
-#[allow(non_snake_case)]
 pub fn _Veq<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::SB(L.into(), R.into()))
 }
 
 // 分岐構文関数
-#[allow(non_snake_case)]
 pub fn _Branch<T: Into<Box<E>>, U: Into<Box<E>>, V: Into<Box<E>>>(
     Terms: T,
     TrueNode: U,
@@ -1472,115 +1451,96 @@ pub fn _Branch<T: Into<Box<E>>, U: Into<Box<E>>, V: Into<Box<E>>>(
 
 // 演算子関数
 /// "+" addition
-#[allow(non_snake_case)]
 fn _Add<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("add".to_string(), L.into(), R.into()))
 }
 
 /// "-" substruction
-#[allow(non_snake_case)]
 fn _Sub<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("sub".to_string(), L.into(), R.into()))
 }
 
 /// "*" multipication
-#[allow(non_snake_case)]
 fn _Mul<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("mul".to_string(), L.into(), R.into()))
 }
 
 /// "/" division
-#[allow(non_snake_case)]
 fn _Div<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("div".to_string(), L.into(), R.into()))
 }
 
 /// "%" modulo
-#[allow(non_snake_case)]
 fn _Mod<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("mod".to_string(), L.into(), R.into()))
 }
 
 /// "||" or
-#[allow(non_snake_case)]
 fn _LOr<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("lor".to_string(), L.into(), R.into()))
 }
 
 /// "&&" and
-#[allow(non_snake_case)]
 fn _LAnd<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("land".to_string(), L.into(), R.into()))
 }
 
 /// "|" or
-#[allow(non_snake_case)]
 fn _Or<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("or".to_string(), L.into(), R.into()))
 }
 
 /// "&" and
-#[allow(non_snake_case)]
 fn _And<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("and".to_string(), L.into(), R.into()))
 }
 
 /// "^" exclusive or
-#[allow(non_snake_case)]
 fn _Xor<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("xor".to_string(), L.into(), R.into()))
 }
 
 /// "==" equal
-#[allow(non_snake_case)]
 pub fn _Eq<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("equal".to_string(), L.into(), R.into()))
 }
 
 /// "!=" not equal
-#[allow(non_snake_case)]
 pub fn _Neq<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("Not equal".to_string(), L.into(), R.into()))
 }
 
 /// "<<" left shift
-#[allow(non_snake_case)]
 fn _LSH<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("lshift".to_string(), L.into(), R.into()))
 }
 
 /// ">>" right shift
-#[allow(non_snake_case)]
 fn _RSH<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("rshift".to_string(), L.into(), R.into()))
 }
 
 /// ">>>" right arithmetic shift
-#[allow(non_snake_case)]
 pub fn _RSHA<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("rshifta".to_string(), L.into(), R.into()))
 }
 
 /// "<" more than
-#[allow(non_snake_case)]
 fn _MTH<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("more_than".to_string(), L.into(), R.into()))
 }
 
 /// ">" less than
-#[allow(non_snake_case)]
 fn _LTH<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("less_than".to_string(), L.into(), R.into()))
 }
 
 /// "<=" or more
-#[allow(non_snake_case)]
 fn _OMR<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("or_more".to_string(), L.into(), R.into()))
 }
 
 /// ">=" or less
-#[allow(non_snake_case)]
 fn _OLS<T: Into<Box<E>>, U: Into<Box<E>>>(L: T, R: U) -> Box<E> {
     Box::new(E::Bin("or_less".to_string(), L.into(), R.into()))
 }
@@ -1982,8 +1942,6 @@ where
   **/
 
 /// 分解出力関数
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 fn DeconpAST(Parenthesis: bool, ast: Box<E>, cnfg: &str, indent: i32) -> String{
     let e = *ast;
     let mut st = String::new();
@@ -2133,8 +2091,6 @@ fn DeconpAST(Parenthesis: bool, ast: Box<E>, cnfg: &str, indent: i32) -> String{
 }
 
 /// GlobalParameter出力関数
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 fn PrintParam(Param: Vec<wrVar>) -> String {
     let tmp = Param;
     let n = tmp.len();
@@ -2161,8 +2117,6 @@ fn PrintParam(Param: Vec<wrVar>) -> String {
 }
 
 /// 入出力ポート出力関数
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 fn PrintPort(Port: Vec<wrVar>) -> String {
     let tmp = Port;
     let n = tmp.len();
@@ -2227,14 +2181,12 @@ fn PrintPort(Port: Vec<wrVar>) -> String {
 }
 
 /// LocalParameter + Wire + Reg出力関数
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 fn PrintLocal(PWR: Vec<wrVar>) -> String {
 	if PWR.len() == 0 {
 		return String::new();
 	}
     let mut st = String::new();
-    st += "    // ----Generate local parts----\n\n";
+    st += "    // ----Generate Local Parts----\n\n";
     let tmp = PWR;
     for x in tmp {
         let port_set = x.getIO();
@@ -2279,14 +2231,12 @@ fn PrintLocal(PWR: Vec<wrVar>) -> String {
 }
 
 /// assign出力関数
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 fn PrintAssign(Assign: Vec<Assign>) -> String {
 	if Assign.len() == 0 {
 		return String::new();
 	}
     let mut st = String::new();
-    st += "\n    // ----Generate assign compornent----\n\n";
+    st += "\n    // ----Generate Assign Compornent----\n\n";
     let tmp = Assign;
     for mut x in tmp {
         let LO = x.LOut();
@@ -2302,14 +2252,12 @@ fn PrintAssign(Assign: Vec<Assign>) -> String {
 }
 
 /// always出力関数
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 fn PrintAlways(Always: Vec<Always>) -> String {
 	if Always.len() == 0 {
 		return String::new();
 	}
     let mut st = String::new();
-    st += "\n    // ----Generate Always block----\n\n";
+    st += "\n    // ----Generate Always Block----\n\n";
     let tmp = Always.clone();
     for x in tmp {
         st += "    always@(";
@@ -2346,14 +2294,12 @@ fn PrintAlways(Always: Vec<Always>) -> String {
 }
 
 /// function出力関数
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 fn PrintFunction(Function: Vec<Func_AST>) -> String {
 	if Function.len() == 0 {
 		return String::new();
 	}
     let mut st = String::new();
-    st += "\n    // ----Generate Function block----\n";
+    st += "\n    // ----Generate Function Block----\n";
 
     let tmp = Function.clone();
     for x in tmp {
@@ -2390,8 +2336,6 @@ fn PrintFunction(Function: Vec<Func_AST>) -> String {
 }
 
 /// if_else構文出力関数--ブロック出力関数より呼び出し
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 fn PrintIf(If_Stmt: Vec<IfStmt_AST>, cnfg: &str, indent: i32) -> String {
     let tmp = If_Stmt;
     let mut num = 0;
@@ -2453,8 +2397,6 @@ fn PrintIf(If_Stmt: Vec<IfStmt_AST>, cnfg: &str, indent: i32) -> String {
 }
 
 /// Case構文出力関数--ブロック出力関数より呼び出し
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 fn PrintCase(case_stmt: CaseStmt_AST, cnfg: &str, indent: i32) -> String {
     let mut tmp = case_stmt;
     let ctmp = tmp.clone().Select;
@@ -2504,8 +2446,6 @@ fn PrintCase(case_stmt: CaseStmt_AST, cnfg: &str, indent: i32) -> String {
 }
 
 /// Fsm構文出力関数--always文を生成する
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 fn PrintFsm(Fsm: FsmModule) -> String {
     let mut st = String::new(); 
     let tmp = Fsm.clone();
@@ -2529,8 +2469,6 @@ fn PrintFsm(Fsm: FsmModule) -> String {
 }
 
 /// 1Stateモデル出力関数
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 fn PrintState(STMT: StateModule) -> String {
     let mut s = STMT;
     let stname = s.getStateName();
@@ -2546,8 +2484,6 @@ fn PrintState(STMT: StateModule) -> String {
 }
 
 /// AXIインタフェース出力関数
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 fn PrintAXI(AXI_Sugar: AXI, num: i32) -> String {
     let tmp = AXI_Sugar.clone();
 	let mut st = String::new();
@@ -2561,8 +2497,6 @@ fn PrintAXI(AXI_Sugar: AXI, num: i32) -> String {
 }
 
 /// AXISLite構文出力関数--ほぼテンプレ
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
 	let tmp = AXISL.clone();
     let mut st = String::new();
@@ -2583,7 +2517,7 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
         reg_addr_width += 1;
     }
 
-	st += &format!("    // AXI Lite Slave port : Number {}\n", count);
+	st += &format!("    // AXI Lite Slave Port : Number {}\n", count);
     st += &format!("    reg r_en{};\n", count);
     st += &format!("    wire w_wdata_en{};\n", count);
     st += &format!("    wire w_rdata_en{};\n\n", count);
@@ -2697,8 +2631,6 @@ macro_rules! Blank {
 
 
 /// FSM生成関数
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 pub fn Clock_Reset<T: Into<Box<E>>, U: Into<Box<E>>>(in_clk: T, in_rst: U) -> FsmModule {
     let p = wrVar::new().Reg("state", 32);
     FsmModule{clk: in_clk.into(), rst: in_rst.into(), fsm: p, State: Vec::new(), Current_state: 0}
@@ -2706,7 +2638,6 @@ pub fn Clock_Reset<T: Into<Box<E>>, U: Into<Box<E>>>(in_clk: T, in_rst: U) -> Fs
 
 /// FSMモジュール
 #[derive(Debug,Clone)]
-#[allow(non_snake_case)]
 pub struct FsmModule {
     clk: Box<E>,
     rst: Box<E>,
@@ -2715,22 +2646,17 @@ pub struct FsmModule {
     Current_state: i32,
 }
 
-#[allow(non_snake_case)]
 impl FsmModule {
     fn FirstState(&mut self) -> Box<E> {
         self.State[0].getState()
     }
     // ステートレジスタの変更
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn State(&mut self, set_state: &str) -> FsmModule {
         self.fsm = wrVar::new().Reg(set_state, 32);
         self.clone()
     }
 
     // ステートの追加
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn AddState(&mut self, State_name: &str) -> FsmModule{
         let mut p = wrVar::new();
         self.Current_state = self.State.len() as i32;
@@ -2742,8 +2668,6 @@ impl FsmModule {
     }
 
     // カレントの移動
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     pub fn Current(&mut self, State_name: &str) -> FsmModule {
         let mut count = 0;
         for x in &mut self.State {
@@ -2758,9 +2682,7 @@ impl FsmModule {
     }
 
     // カレントステートから次のステートへの定義
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
-    pub fn goto<T: Into<Box<E>>>(mut self, State_name: &str, Branch: T) -> FsmModule {
+    pub fn goto<T: Into<Box<E>>>(&mut self, State_name: &str, Branch: T) -> FsmModule {
         
         let SelfS = self.fsm.clone();
         let mut st = "".to_string();
@@ -2774,9 +2696,7 @@ impl FsmModule {
     }
 
     // 指定ステートからカレントステートへの定義(指定ステートの作成後以降に使用可)
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
-    pub fn from<T: Into<Box<E>>>(mut self, State_name: &str, Branch: T) -> FsmModule {
+    pub fn from<T: Into<Box<E>>>(&mut self, State_name: &str, Branch: T) -> FsmModule {
         let SelfS = self.fsm.clone();
         let mut st = "".to_string();
         if let E::Ldc(wr) = *SelfS.clone() { st = wr.getName().clone() };
@@ -2796,7 +2716,6 @@ impl FsmModule {
     }
 
     // セットパラメータの取得
-    #[allow(dead_code)]
     pub fn Param(&mut self, name: &str) -> Box<E> {
         let SelfS = self.State.clone();
         for mut x in SelfS {
@@ -2809,31 +2728,23 @@ impl FsmModule {
     }
 
     // 内部メソッド(ステート格納レジスタを外部に出力)
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     fn StateReg(self) -> Box<E> {
         let tmp = self.clone();
         tmp.fsm
     }
 
     // 内部メソッド(クロックを外部に出力)
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     fn StateClk(self) -> Box<E> {
         let tmp = self.clone();
         tmp.clk
     }
 
     // 内部メソッド(リセットを外部に出力)
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     fn StateRst(self) -> Box<E> {
         let tmp = self.clone();
         tmp.rst
     }
 
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     fn StateOut(self) -> Vec<StateModule>
     {
         let tmp = self.clone();
@@ -2843,24 +2754,18 @@ impl FsmModule {
 
 /// 1ステートモデル
 #[derive(Debug,Clone)]
-#[allow(non_snake_case)]
 struct StateModule {
     State: Box<E>,
     Branch: Vec<IfStmt_AST>,
 }
 
-#[allow(non_snake_case)]
 impl StateModule {
     // ステート設定
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     fn SetState(&mut self, stmt: Box<E>){
         self.State = stmt
     }
 
     // ステート分岐先設定
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     fn SetBranch<T: Into<Box<E>>, U: Into<Box<E>>>(&mut self, Terms: T, Form: U) -> bool {
         let e = *(Terms.into());
         let mut tmp = Vec::new();
@@ -2871,16 +2776,13 @@ impl StateModule {
             _ => self.Branch.push(IfStmt_AST{If_: true, IfE: Box::new(e), ST: tmp}),
         }
         return true;
-    }
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
+	}
+	
     fn getState(&mut self) -> Box<E> {
         let tmp = self.clone();
         tmp.State
     }
 
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     fn getStateName(&mut self) -> String {
         let tmp = *(self.clone().State);
         match tmp {
@@ -2889,8 +2791,6 @@ impl StateModule {
         }
     }
 
-    #[allow(dead_code)]
-    #[allow(non_snake_case)]
     fn getBranch(&mut self) -> Vec<IfStmt_AST> {
         self.clone().Branch
     }
@@ -2898,7 +2798,6 @@ impl StateModule {
 
 /// AXI wrapping enum
 #[derive(Debug,Clone)]
-#[allow(dead_code)]
 enum AXI {
     Lite(AXISLite),
     Slave(AXIS),
@@ -2908,22 +2807,18 @@ enum AXI {
 
 /// AXI Stream インタフェースの作成 - 未実装
 #[derive(Debug,Clone)]
-#[allow(non_snake_case)]
 pub struct AXIST;
 
 /// AXI Master インタフェースの作成 - 未実装
 #[derive(Debug,Clone)]
-#[allow(non_snake_case)]
 pub struct AXIM;
 
 /// AXI Slave インタフェースの作成 - 未実装
 #[derive(Debug,Clone)]
-#[allow(non_snake_case)]
 pub struct AXIS;
 
 /// AXI Slave Lite インタフェースの作成
 #[derive(Debug,Clone)]
-#[allow(non_snake_case)]
 pub struct AXISLite {
 	clk: Box<E>,
 	rst: Box<E>,
@@ -2933,8 +2828,6 @@ pub struct AXISLite {
 }
 
 /// AXI Slave Lite インターフェース生成
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 pub fn AXIS_Lite_new<T: Into<Box<E>>, U: Into<Box<E>>>(clock: T, reset: U) -> AXISLite {
 	AXISLite{
 		clk: clock.into(),
@@ -2947,7 +2840,6 @@ pub fn AXIS_Lite_new<T: Into<Box<E>>, U: Into<Box<E>>>(clock: T, reset: U) -> AX
 
 /// AXI IFのレジスタ設定トレイト
 #[allow(non_camel_case_types)]
-#[allow(non_snake_case)]
 pub trait AXI_S_IF_Set<T> {
 	// 数だけ指定してレジスタを生成
 	fn OrderRegSet(&mut self, num: i32) -> T;
@@ -2964,7 +2856,6 @@ pub trait AXI_S_IF_Set<T> {
 
 /// ローカルからのレジスタ制御設定トレイト
 #[allow(non_camel_case_types)]
-#[allow(non_snake_case)]
 pub trait AXI_S_IF_LocalWrite<T, U>
 where
     U: Into<Box<E>>,
@@ -2973,7 +2864,6 @@ where
 }
 
 impl AXI_S_IF_Set<AXISLite> for AXISLite {
-	#[allow(non_snake_case)]
 	fn OrderRegSet(&mut self, num: i32) -> AXISLite {
 		for x in 0..num {
 			let Regname = format!("{}{}", "slv_reg".to_string(), x.to_string());
@@ -2985,7 +2875,6 @@ impl AXI_S_IF_Set<AXISLite> for AXISLite {
 		self.clone()
 	}
 
-	#[allow(non_snake_case)]
 	fn NamedRegSet(&mut self, name: &str) -> AXISLite {
 		let reg = wrVar::new().Reg(name, 32);
 		self.reg_array.push(reg);
@@ -2994,13 +2883,11 @@ impl AXI_S_IF_Set<AXISLite> for AXISLite {
 		self.clone()
 	}
 
-	#[allow(non_snake_case)]
 	fn OrderReg(&mut self, num: i32) -> Box<E> {
 		let SelfReg = self.reg_array.clone();
 		return SelfReg[num as usize].clone();
 	}
 
-	#[allow(non_snake_case)]
 	fn NamedReg(&mut self, name: &str) -> Box<E> {
 		let SelfReg = self.reg_array.clone();
 		for x in SelfReg {
@@ -3032,7 +2919,6 @@ where
 // 基本Box<E>の分解に使用
 
 /// AST分解メソッド
-#[allow(non_snake_case)]
 pub fn _Decomp<T: Into<Box<E>>>(e: T, Sel: &str) -> Box<E> {
     let m = *e.into();
     match m {
@@ -3057,7 +2943,6 @@ pub fn _Decomp<T: Into<Box<E>>>(e: T, Sel: &str) -> Box<E> {
 }
 
 /// AST文字列抽出メソッド
-#[allow(non_snake_case)]
 pub fn _StrOut<T: Into<Box<E>>>(e: T) -> String {
     let m = *e.into();
     match m {
@@ -3068,7 +2953,6 @@ pub fn _StrOut<T: Into<Box<E>>>(e: T) -> String {
 }
 
 /// AST数値抽出メソッド
-#[allow(non_snake_case)]
 pub fn _NumOut<T: Into<Box<E>>>(e: T) -> i32 {
     let m = *e.into();
     match m {
