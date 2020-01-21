@@ -378,7 +378,45 @@ impl VModule {
 		self.Inline += code;
 		self.Inline += "\n\n";
 	}
+
+	// debug
+	pub fn get_mod_name(&mut self) -> String {
+		self.Module_Name.clone()
+	}
+
+	pub fn out_port(&mut self) -> Vec<wrVar> {
+		self.IO_Port.clone()
+	}
+
+	pub fn out_param(&mut self) -> Vec<wrVar> {
+		self.IO_Param.clone()
+	}
+
+	pub fn out_l_param(&mut self) -> Vec<wrVar> {
+		self.Local.clone()
+	}
+
+	pub fn out_func_name(&mut self) -> Vec<String> {
+		let mut st = Vec::new();
+		let tmp = self.Function_AST.clone();
+		for x in tmp {
+			let e = x.top;
+			if let E::Ldc(wrtop) = (*e).clone() {
+				st.push(wrtop.getName());
+			}
+		}
+		st
+	}
+
+	pub fn out_assign(&mut self) -> Vec<Assign> {
+		self.Assign_AST.clone()
+	}
+
+	pub fn out_always(&mut self) -> Vec<Always> {
+		self.Always_AST.clone()
+	}
 }
+
 
 /// function 構文ブロック追加用トレイト
 #[allow(non_camel_case_types)]
@@ -513,41 +551,40 @@ impl AXI_trait<AXISLite> for VModule {
         }
 
         // read address channel
-        let o_arr = self.Output(&(format!("o_S_ARREADY{}", length.clone())), 0);
-        let i_arv = self.Input(&(format!("i_S_ARVALID{}", length.clone())), 0);
-        self.Input(&(format!("i_S_ARADDR{}", length.clone())), reg_addr_width);
-        self.Input(&(format!("i_S_ARPROT{}", length.clone())), 3);
+        let o_arr = self.Output(&(format!("o_s_arready{}", length.clone())), 0);
+        let i_arv = self.Input(&(format!("i_s_arvalid{}", length.clone())), 0);
+                    self.Input(&(format!("i_s_araddr{}", length.clone())), reg_addr_width);
+                    self.Input(&(format!("i_s_arprot{}", length.clone())), 3);
 
         // read data channel
-        let o_rda = self.Output(&(format!("o_S_RDATA{}", length.clone())), 32);
-        let o_rsp = self.Output(&(format!("o_S_RRESP{}", length.clone())), 2);
-        let o_rva = self.Output(&(format!("o_S_RVALID{}", length.clone())), 0);
-        let i_rre = self.Input(&(format!("i_S_RREADY{}", length.clone())), 0);
+        let o_rda = self.Output(&(format!("o_s_rdata{}", length.clone())), 32);
+        let o_rsp = self.Output(&(format!("o_s_rresp{}", length.clone())), 2);
+        let o_rva = self.Output(&(format!("o_s_rvalid{}", length.clone())), 0);
+        let i_rre = self.Input(&(format!("i_s_rready{}", length.clone())), 0);
 
         // write address channel
-        let o_awr = self.Output(&(format!("o_S_AWREADY{}", length.clone())), 0);
-        let i_awv = self.Input(&(format!("i_S_AWVALID{}", length.clone())), 0);
-                    self.Input(&(format!("i_S_AWADDR{}", length.clone())), reg_addr_width);
-                    self.Input(&(format!("i_S_AWPROT{}", length.clone())), 3);
+        let o_awr = self.Output(&(format!("o_s_awready{}", length.clone())), 0);
+        let i_awv = self.Input(&(format!("i_s_awvalid{}", length.clone())), 0);
+                    self.Input(&(format!("i_s_awaddr{}", length.clone())), reg_addr_width);
+                    self.Input(&(format!("i_s_awprot{}", length.clone())), 3);
 
         // write data channel
-        let i_wda = self.Input(&(format!("i_S_WDATA{}", length.clone())), 32);
-        let i_wst = self.Input(&(format!("i_S_WSTRB{}", length.clone())), 4);
-        let i_wva = self.Input(&(format!("i_S_WVALID{}", length.clone())), 0);
-        let o_wre = self.Output(&(format!("o_S_WREADY{}", length.clone())), 0);
+        let i_wda = self.Input(&(format!("i_s_wdata{}", length.clone())), 32);
+        let i_wst = self.Input(&(format!("i_s_wstrb{}", length.clone())), 4);
+        let i_wva = self.Input(&(format!("i_s_wvalid{}", length.clone())), 0);
+        let o_wre = self.Output(&(format!("o_s_wready{}", length.clone())), 0);
 
         // write response channel
-        let o_bre = self.Output(&(format!("o_S_BRESP{}", length.clone())), 2);
-        let o_bva = self.Output(&(format!("o_S_BVALID{}", length.clone())), 0);
-        let i_bre = self.Input(&(format!("i_S_BREADY{}", length.clone())), 0);
+        let o_bre = self.Output(&(format!("o_s_bresp{}", length.clone())), 2);
+        let o_bva = self.Output(&(format!("o_s_bvalid{}", length.clone())), 0);
+        let i_bre = self.Input(&(format!("i_s_bready{}", length.clone())), 0);
 
         // inner wire and register
         let r_arr = self.Reg(&(format!("r_arready{}", length.clone())), 0);
         let w_arv = self.Wire(&(format!("w_arvalid{}", length.clone())), 0);
-        self.Reg(&(format!("r_araddr{}", length.clone())), reg_addr_width);
+                    self.Reg(&(format!("r_araddr{}", length.clone())), reg_addr_width);
 
         let r_rda = self.Reg(&(format!("r_rdata{}", length.clone())), 32);
-        let r_rsp = self.Reg(&(format!("r_rresp{}", length.clone())), 2);
         let r_rva = self.Reg(&(format!("r_rvalid{}", length.clone())), 0);
         let w_rre = self.Wire(&(format!("w_rready{}", length.clone())), 0);
 
@@ -560,7 +597,6 @@ impl AXI_trait<AXISLite> for VModule {
         let w_wva = self.Wire(&(format!("w_wvalid{}", length.clone())), 0);
         let r_wre = self.Reg(&(format!("r_wready{}", length.clone())), 0);
 
-        let r_bre = self.Reg(&(format!("r_bresp{}", length.clone())), 2);
         let r_bva = self.Reg(&(format!("r_bvalid{}", length.clone())), 0);
         let w_bre = self.Wire(&(format!("w_bready{}", length.clone())), 0);
 
@@ -569,7 +605,7 @@ impl AXI_trait<AXISLite> for VModule {
         self.Assign(w_arv._e(i_arv));
 
         self.Assign(o_rda._e(r_rda));
-        self.Assign(o_rsp._e(r_rsp));
+        self.Assign(o_rsp._e(0));
         self.Assign(o_rva._e(r_rva));
         self.Assign(w_rre._e(i_rre));
 
@@ -582,7 +618,7 @@ impl AXI_trait<AXISLite> for VModule {
         self.Assign(w_wva._e(i_wva));
         self.Assign(o_wre._e(r_wre));
 
-        self.Assign(o_bre._e(r_bre));
+        self.Assign(o_bre._e(0));
         self.Assign(o_bva._e(r_bva));
         self.Assign(w_bre._e(i_bre));
 
@@ -595,6 +631,122 @@ impl AXI_trait<AXISLite> for VModule {
 
         self.Axi.push(AXI::Lite(setAXI));
     }
+}
+
+#[allow(non_camel_case_types)]
+impl AXI_trait<AXIS> for VModule {
+    fn AXI(&mut self, setAXI: AXIS) {
+		let length = setAXI.length.clone();
+
+		let mut addr_width: i32 = 1;
+		loop {
+        	if 2i32.pow(addr_width as u32) >= (length * 4 - 1) {
+        	    break;
+        	}
+        	addr_width += 1;
+		}
+
+		// read address channel
+		let i_rid = self.Input("i_saxi_arid", 0);
+        let o_arr = self.Output("o_saxi_arready", 0);
+        let i_arv = self.Input("i_saxi_arvalid", 0);
+					self.Input("i_saxi_araddr", addr_width);
+					self.Input("i_saxi_arlen", 8);
+					self.Input("i_saxi_arburst", 2);
+		
+		// read data channel
+		let o_rid = self.Output("o_saxi_rid", 0);
+        let o_rda = self.Output("o_saxi_rdata", 32);
+        let o_rsp = self.Output("o_saxi_rresp", 2);
+        let o_rva = self.Output("o_saxi_rvalid", 0);
+		let i_rre = self.Input("i_saxi_rready", 0);
+		let o_rls = self.Output("o_saxi_rlast", 0);
+
+		// write address channel
+		let i_wid = self.Input("i_saxi_awid", 0);
+        let o_awr = self.Output("o_saxi_awready", 0);
+        let i_awv = self.Input("i_saxi_awvalid", 0);
+					self.Input("i_saxi_awaddr", addr_width);
+					self.Input("i_saxi_awlen", 8);
+					self.Input("i_saxi_awburst", 2);
+
+		// write data channel
+        			self.Input("i_saxi_wdata", 32);
+					self.Input("i_saxi_wstrb", 4);
+		let i_wls =	self.Input("i_saxi_wlast", 0);
+        let i_wva = self.Input("i_saxi_wvalid", 0);
+		let o_wre = self.Output("o_saxi_wready", 0);
+		
+		// write response channel
+		let o_bid = self.Output("o_saxi_bid", 0);
+        let o_bre = self.Output("o_saxi_bresp", 2);
+        let o_bva = self.Output("o_saxi_bvalid", 0);
+		let i_bre = self.Input("i_saxi_bready", 0);
+
+
+		// inner wire and register
+		let r_awr = self.Reg("r_axi_awready", 0);
+		let w_awv = self.Wire("w_axi_awvalid", 0);
+					self.Reg("r_axi_awaddr", addr_width);
+					self.Reg("r_axi_awlen", 8);
+
+					self.Wire("w_axi_wdata", 32);
+		let w_wls = self.Wire("w_axi_wlast", 0);
+		let w_wva = self.Wire("w_axi_wvalid", 0);
+		let r_wre = self.Reg("r_axi_wready", 0);
+
+        let r_bva = self.Reg("r_axi_bvalid", 0);
+		let w_bre = self.Wire("w_axi_bready", 0);
+
+		let r_arr = self.Reg("r_axi_arready", 0);
+		let w_arv = self.Wire("w_axi_arvalid", 0);
+					self.Reg("r_axi_araddr", 32);
+					self.Reg("r_axi_arlen", 8);
+
+		let r_rda = self.Reg("r_axi_rdata", 32);
+		let r_rva = self.Reg("r_axi_rvalid", 0);
+		let w_rre = self.Wire("w_axi_rready", 0);
+		let r_rls = self.Reg("r_axi_rlast", 0);
+		if setAXI.clone().mem {
+			self.Wire("axis_write", 32);
+			self.Reg("axis_read", 32);
+			self.Wire("axis_addr", 32);
+			self.Wire("axis_wen", 0);
+		}
+		else {
+			if let E::Null = *(setAXI.clone().rdata) {
+				self.Wire("axis_read", 32);
+			}
+			self.Wire("axis_write", 32);
+			self.Wire("axis_addr", 32);
+			self.Wire("axis_wen", 0);
+		}
+		
+		
+		self.Assign(o_rid._e(i_rid));
+		self.Assign(o_rsp._e(0));
+		self.Assign(o_rda._e(r_rda));
+		self.Assign(o_rva._e(r_rva));
+		self.Assign(w_rre._e(i_rre));
+		self.Assign(o_rls._e(r_rls));
+
+		self.Assign(o_arr._e(r_arr));
+		self.Assign(w_arv._e(i_arv));
+
+		self.Assign(w_wls._e(i_wls));
+		self.Assign(w_wva._e(i_wva));
+		self.Assign(o_wre._e(r_wre));
+
+		self.Assign(o_awr._e(r_awr));
+		self.Assign(w_awv._e(i_awv));
+
+		self.Assign(o_bva._e(r_bva));
+		self.Assign(w_bre._e(i_bre));
+		self.Assign(o_bid._e(i_wid));
+		self.Assign(o_bre._e(0));
+
+		self.Axi.push(AXI::Slave(setAXI));
+	}
 }
 
 
@@ -1031,7 +1183,15 @@ impl Always {
             },
         }
         self.clone()
-    }
+	}
+	
+	pub fn out_p_edge(&mut self) -> Vec<wrVar> {
+		self.P_edge.clone()
+	}
+
+	pub fn out_n_edge(&mut self) -> Vec<wrVar> {
+		self.N_edge.clone()
+	}
 }
 
 /**
@@ -1942,7 +2102,7 @@ where
   **/
 
 /// 分解出力関数
-fn DeconpAST(Parenthesis: bool, ast: Box<E>, cnfg: &str, indent: i32) -> String{
+fn DecompAST(Parenthesis: bool, ast: Box<E>, cnfg: &str, indent: i32) -> String{
     let e = *ast;
     let mut st = String::new();
 
@@ -1962,7 +2122,7 @@ fn DeconpAST(Parenthesis: bool, ast: Box<E>, cnfg: &str, indent: i32) -> String{
                 }
             }
             let mut pareset = false;
-            st += &DeconpAST(false ,l.clone(),cnfg, 0);
+            st += &DecompAST(false ,l.clone(),cnfg, 0);
             match tmp.clone() {
                 "add" => {st += "+";},
                 "sub" => {st += "-";},
@@ -1985,7 +2145,7 @@ fn DeconpAST(Parenthesis: bool, ast: Box<E>, cnfg: &str, indent: i32) -> String{
                 "or_less" => {st += ">=";},
                 _ => panic!("No correspond syntax : error operator -- {}", tmp),
             }
-            st += &DeconpAST(pareset, r.clone(),cnfg, 0);
+            st += &DecompAST(pareset, r.clone(),cnfg, 0);
             if Parenthesis {
                 match tmp {
                     "add" => {st += ")";},
@@ -2004,25 +2164,25 @@ fn DeconpAST(Parenthesis: bool, ast: Box<E>, cnfg: &str, indent: i32) -> String{
         }
         E::PL(ref d, ref t, ref f) => {
             st += "(";
-            st += &DeconpAST(false,d.clone(),cnfg, 0);
+            st += &DecompAST(false,d.clone(),cnfg, 0);
             st += ")? ";
-            st += &DeconpAST(false, t.clone(),cnfg, 0);
+            st += &DecompAST(false, t.clone(),cnfg, 0);
             st += ": ";
 
-            st += &DeconpAST(false, f.clone(),cnfg, 0);
+            st += &DecompAST(false, f.clone(),cnfg, 0);
         },
         E::SB(ref l, ref r) => {
             for _ in 0..indent {
                 st += "    ";
             }
-            st += &DeconpAST(false, l.clone(),cnfg, indent);
+            st += &DecompAST(false, l.clone(),cnfg, indent);
             if cnfg.to_string() == "brock".to_string() {
                 st += " = ";
             }
             else {
                 st += " <= ";
             }
-            st += &DeconpAST(false, r.clone(),cnfg, 0);
+            st += &DecompAST(false, r.clone(),cnfg, 0);
             st += ";\n";
         }
         E::CS(ref c) => {
@@ -2036,28 +2196,28 @@ fn DeconpAST(Parenthesis: bool, ast: Box<E>, cnfg: &str, indent: i32) -> String{
         E::MEM(ref m, ref a) => {
             let ma = &*m;
             let aa = &*a;
-            st += &DeconpAST(false, ma.clone(),cnfg, indent);
+            st += &DecompAST(false, ma.clone(),cnfg, indent);
             st += &format!("[");
-            st += &DeconpAST(false, aa.clone(),cnfg, 0);
+            st += &DecompAST(false, aa.clone(),cnfg, 0);
             st += &format!("]");
         }
 		E::MBT(ref m, ref a, ref b) => {
 			let mn = &*m;
 			let aa = &*a;
 			let bb = &*b;
-			st += &DeconpAST(false, mn.clone(),cnfg, indent);
+			st += &DecompAST(false, mn.clone(),cnfg, indent);
 			st += &format!("[");
-            st += &DeconpAST(false, aa.clone(),cnfg, 0);
+            st += &DecompAST(false, aa.clone(),cnfg, 0);
 			st += &format!(":");
-			st += &DeconpAST(false, bb.clone(),cnfg, 0);
+			st += &DecompAST(false, bb.clone(),cnfg, 0);
             st += &format!("]");
 		}
 		E::Func(ref a, ref v) => {
-			st += &DeconpAST(false, a.clone(), cnfg, 0);
+			st += &DecompAST(false, a.clone(), cnfg, 0);
 			st += &format!("(");
 			let mut i: usize = 0;
 			for x in v.clone() {
-				st += &DeconpAST(false, x.clone(), cnfg, 0);
+				st += &DecompAST(false, x.clone(), cnfg, 0);
 				i += 1;
 				if v.len() != i {
 					st += &format!(", ");
@@ -2068,7 +2228,7 @@ fn DeconpAST(Parenthesis: bool, ast: Box<E>, cnfg: &str, indent: i32) -> String{
         E::No(ref b) => {
             let bb = &*b;
             st += "~";
-            st += &DeconpAST(false, bb.clone(),cnfg, 0);
+            st += &DecompAST(false, bb.clone(),cnfg, 0);
         }
         E::Red(ref r, ref a) => {
             let tmp = r.as_str();
@@ -2081,7 +2241,7 @@ fn DeconpAST(Parenthesis: bool, ast: Box<E>, cnfg: &str, indent: i32) -> String{
                 "xnor"=> {st += "~^"},
 				_ => {return st;},
             }
-			st += &DeconpAST(false, a.clone(), cnfg, 0);
+			st += &DecompAST(false, a.clone(), cnfg, 0);
         }
         _ => {
             st += "";
@@ -2241,10 +2401,10 @@ fn PrintAssign(Assign: Vec<Assign>) -> String {
     for mut x in tmp {
         let LO = x.LOut();
         st += "    assign ";
-        st += &DeconpAST(false, LO, "", 0);
+        st += &DecompAST(false, LO, "", 0);
         st += " = ";
         let port_set = x.ROut();
-        st += &DeconpAST(false, port_set, "", 0);
+        st += &DecompAST(false, port_set, "", 0);
         st += ";\n";
     }
     st += "\n";
@@ -2285,7 +2445,7 @@ fn PrintAlways(Always: Vec<Always>) -> String {
         }
         st += ") begin\n";
         for s in x.stmt.clone() {
-            st += &DeconpAST(false, s,&x.clone().blockout(), 2);
+            st += &DecompAST(false, s,&x.clone().blockout(), 2);
         }
         
         st += "    end\n";
@@ -2306,7 +2466,7 @@ fn PrintFunction(Function: Vec<Func_AST>) -> String {
         let e = x.top;
         if let E::Ldc(wrtop) = (*e).clone() {
             st += &format!("\n    function [{}:0] ", wrtop.getWidth()-1);
-            st += &DeconpAST(false, e, "", 1);
+            st += &DecompAST(false, e, "", 1);
         }
 		st += "(\n";
 		let mut i = 0;
@@ -2314,11 +2474,11 @@ fn PrintFunction(Function: Vec<Func_AST>) -> String {
             if let E::Ldc(wr) = (*inpt).clone() {
                 if wr.getWidth() > 0 {
                     st += &format!("        input [{}:0]", wr.getWidth()-1);
-                    st += &DeconpAST(false, inpt, "",2);
+                    st += &DecompAST(false, inpt, "",2);
                 }
                 else {
                     st += "        input ";
-                    st += &DeconpAST(false, inpt, "", 2);
+                    st += &DecompAST(false, inpt, "", 2);
                 }
 				i += 1;
 				if i != x.input.len() {
@@ -2328,7 +2488,7 @@ fn PrintFunction(Function: Vec<Func_AST>) -> String {
         }
 		st += "\n    );\n";
         for s in x.stmt {
-            st += &DeconpAST(false, s, "", 2);
+            st += &DecompAST(false, s, "", 2);
         }
         st += "    endfunction\n\n";
     }
@@ -2358,7 +2518,7 @@ fn PrintIf(If_Stmt: Vec<IfStmt_AST>, cnfg: &str, indent: i32) -> String {
                     }
                     st += "if(";
                     num += 1;
-                    st += &DeconpAST(false, x.getTerms(), "", 0);
+                    st += &DecompAST(false, x.getTerms(), "", 0);
                     st += ") begin\n";
                 }
             }
@@ -2368,7 +2528,7 @@ fn PrintIf(If_Stmt: Vec<IfStmt_AST>, cnfg: &str, indent: i32) -> String {
                 st += "    ";
             }
             st += "else if(";
-            st += &DeconpAST(false, x.getTerms(), "",0);
+            st += &DecompAST(false, x.getTerms(), "",0);
             st += ") begin\n";
         }
         else {
@@ -2380,12 +2540,12 @@ fn PrintIf(If_Stmt: Vec<IfStmt_AST>, cnfg: &str, indent: i32) -> String {
 
 		if nonBranch {
 			for y in n.clone() {
-            	st += &DeconpAST(false, y,cnfg, indent);
+            	st += &DecompAST(false, y,cnfg, indent);
         	}
 			return st
 		}
         for y in n.clone() {
-            st += &DeconpAST(false, y,cnfg, indent + 1);
+            st += &DecompAST(false, y,cnfg, indent + 1);
         }
 
         for _ in 0..indent {
@@ -2417,7 +2577,7 @@ fn PrintCase(case_stmt: CaseStmt_AST, cnfg: &str, indent: i32) -> String {
                 st += "default ";
             },
             _ => {
-                st += &DeconpAST(false, e,cnfg, indent + 1);
+                st += &DecompAST(false, e,cnfg, indent + 1);
             },
         }
         st += " :";
@@ -2425,10 +2585,10 @@ fn PrintCase(case_stmt: CaseStmt_AST, cnfg: &str, indent: i32) -> String {
         if n > 1 {st += "begin \n";}
         for y in ef {
             if n > 1 {
-                st += &DeconpAST(false, y,cnfg, indent + 2);
+                st += &DecompAST(false, y,cnfg, indent + 2);
             }
             else {
-                st += &DeconpAST(false, y,cnfg, 0);
+                st += &DecompAST(false, y,cnfg, 0);
             }
         }
         if n > 1 {
@@ -2489,7 +2649,7 @@ fn PrintAXI(AXI_Sugar: AXI, num: i32) -> String {
 	let mut st = String::new();
     match tmp {
         AXI::Lite(x) => { st += &PrintAXISL(x, num);}
-        AXI::Slave(_) => {unimplemented!();}
+        AXI::Slave(x) => {st += &PrintAXIS(x);}
         AXI::Master(_) => {unimplemented!();}
         AXI::Stream(_) => {unimplemented!();}
     }
@@ -2522,7 +2682,7 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
     st += &format!("    wire w_wdata_en{};\n", count);
     st += &format!("    wire w_rdata_en{};\n\n", count);
 
-    // wready - waddress generating
+    st += "    // wready - waddress generating\n";
     st += &format!("    always @( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
     st += &format!("        if( {} ) begin\n", _StrOut(tmp.clone().rst));
     st += &format!("            r_wready{} <= 1'b0;\n            r_awready{0} <= 1'b0;\n            r_en{0} <= 1'b1;\n            r_awaddr{0} <= 0;\n",count);
@@ -2530,7 +2690,7 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
     st += &format!("            if( ~r_wready{} && w_awvalid{0} && w_wvalid{0} && r_en{0} ) begin\n", count);
     st += &format!("                r_wready{0} <= 1'b1;\n            end else begin\n                r_wready{0} <= 1'b0;\n            end\n\n",count);
     st += &format!("            if( ~r_awready{} && w_awvalid{0} && w_wvalid{0} && r_en{0} ) begin\n", count);
-    st += &format!("                r_awready{0} <= 1'b1;\n                r_en{0} <= 1'b0;\n                r_awaddr{0} <= i_S_AWADDR{0};\n", count);
+    st += &format!("                r_awready{0} <= 1'b1;\n                r_en{0} <= 1'b0;\n                r_awaddr{0} <= i_s_awaddr{0};\n", count);
     st += &format!("            end else begin\n");
     st += &format!("                if( w_bready{} && r_bvalid{0} ) begin\n", count);
     st += &format!("                    r_en{} <= 1'b1;\n                end\n", count);
@@ -2539,18 +2699,17 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
 
     st += &format!("    assign w_wdata_en{} = r_awready{0} && r_wready{0} && w_awvalid{0} && w_wvalid{0};\n\n", count);
     
-    // wdata generating
+    st += "    // wdata generating\n";
     st += &format!("    always@( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
     st += &format!("        if( {} ) begin\n", _StrOut(tmp.clone().rst));
 
 	for x in tmp.reg_array.clone() {
-		//println!("            r_{} <= 32'd0;", _StrOut(x));
         st += &format!("            {} <= 32'd0;\n", _StrOut(x));
 	}
     st += &format!("        end\n        else begin\n            if( w_wdata_en{} == 1'd1 ) begin\n", count);
     st += &format!("                case ( r_awaddr{}[{}:2] )\n", count, reg_addr_width-1);
     
-    // generate write register
+    st += "    // generate write register\n";
     for x in reg_tmp.clone() {
         // Unpack
         let reg = x;
@@ -2570,38 +2729,38 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
 	}
     st += "                    end\n                endcase\n            end\n";
 
-	// Local write en
+	st += "    // Local write en\n";
 	let write_tmp = tmp.wLocal_write.clone();
 	let mut i = -1;
 	for x in write_tmp.clone() {
 		i += 1;
 		if let E::Null = *(x.0.clone()) {continue;}
-        st += &format!("\n            if( {} ) begin \n", &DeconpAST(false, x.0, "", 0));
+        st += &format!("\n            if( {} ) begin \n", &DecompAST(false, x.0, "", 0));
         st += &format!("                    {} <= {};\n",
-            _StrOut(reg_tmp[i as usize].clone()), &DeconpAST(false, x.1, "", 0));
+            _StrOut(reg_tmp[i as usize].clone()), &DecompAST(false, x.1, "", 0));
         st += "            end\n";
 	}
     st += "        end\n    end\n\n";
 
-    // wready - waddress generating
+    st += "    // wready - waddress generating\n";
     st += &format!("    always @( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
     st += &format!("        if( {} ) begin\n", _StrOut(tmp.clone().rst));
-    st += &format!("            r_bvalid{} <= 1'b0;\n            r_bresp{0} <= 2'b0;\n",count);
+    st += &format!("            r_bvalid{} <= 1'b0;\n",count);
     st += &format!("            r_arready{} <= 1'b0;\n            r_araddr{0} <= 0;\n",count);
-    st += &format!("            r_rvalid{} <= 1'b0;\n            r_rresp{0} <= 2'b0;\n",count);
+    st += &format!("            r_rvalid{} <= 1'b0;\n",count);
     st += "        end else begin\n";
     
     st += &format!("            if( r_awready{} && w_awvalid{0} && ~r_bvalid{0} && r_wready{0} && w_wvalid{0} ) begin\n", count);
-    st += &format!("                r_bvalid{} <= 1'b1;\n                r_bresp{0} <= 2'b0;\n            end else if( w_bready{0} && r_bvalid{0} ) begin\n                r_bvalid{0} <= 1'b0;\n            end\n\n",count);
+    st += &format!("                r_bvalid{} <= 1'b1;\n            end else if( w_bready{0} && r_bvalid{0} ) begin\n                r_bvalid{0} <= 1'b0;\n            end\n\n",count);
 
     st += &format!("            if( ~r_arready{} && w_arvalid{0} ) begin\n", count);
-    st += &format!("                r_arready{} <= 1'b1;\n                r_araddr{0} <= i_S_ARADDR{0};\n            end else begin\n                r_arready{0} <= 1'b0;\n            end\n", count);
+    st += &format!("                r_arready{} <= 1'b1;\n                r_araddr{0} <= i_s_araddr{0};\n            end else begin\n                r_arready{0} <= 1'b0;\n            end\n", count);
 
     st += &format!("            if( r_arready{} && w_arvalid{0} && ~r_rvalid{0} ) begin\n", count);
-    st += &format!("                r_rvalid{} <= 1'b1;\n                r_rresp{0} <= 2'b0;\n            end else if ( r_rvalid{0} && w_rready{0} ) begin\n                r_rvalid{0} <= 1'b0;\n            end\n", count);
+    st += &format!("                r_rvalid{} <= 1'b1;\n            end else if ( r_rvalid{0} && w_rready{0} ) begin\n                r_rvalid{0} <= 1'b0;\n            end\n", count);
     st += "        end\n    end\n\n";
 
-    // rdata generation
+    st += "    // rdata generation\n";
     st += &format!("    assign w_rdata_en{} = r_arready{0} && w_arvalid{0} && ~r_rvalid{0};\n\n", count);
     st += &format!("    always @( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
     st += &format!("        if( {} ) begin\n", _StrOut(tmp.clone().rst));
@@ -2619,6 +2778,153 @@ fn PrintAXISL(AXISL: AXISLite, count: i32) -> String {
 
     st += &format!("                    default: r_rdata{} <= 32'hDEAD_DEAD;\n                endcase\n", count);
     st += "            end\n        end\n    end\n\n";
+
+	return st;
+}
+
+fn PrintAXIS(AXI: AXIS) -> String {
+	let tmp = AXI.clone();
+	let mut st = String::new();
+	
+	// address space
+	let mut addr_width: i32 = 1;
+	loop {
+        if 2i32.pow(addr_width as u32) >= (tmp.length) {
+            break;
+        }
+        addr_width += 1;
+	}
+
+	st += &format!("    // AXI-full Slave Port\n\n");
+
+	// -- not support wrap mode --
+	st += "    reg            r_axi_awv_awr_flag;\n";
+	st += "    reg            r_axi_arv_arr_flag;\n";
+	st += "    reg    [7:0]   r_axi_awlen_count;\n";
+	st += "    reg    [7:0]   r_axi_arlen_count;\n";
+	st += "    reg    [1:0]   r_axi_arburst;\n";
+	st += "    reg    [1:0]   r_axi_awburst;\n\n";
+
+	if tmp.mem {
+		st += &format!("    reg [31:0] axi_mem [0:{}];\n", tmp.length-1);
+		st += &format!("    always @( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
+		st += &format!("        if ( r_axi_wready & w_axi_wvalid ) begin\n");
+		st += &format!("            axi_mem[r_axi_awaddr] <= w_axi_wdata;\n");
+		st += &format!("        end else if ( axis_wen ) begin\n");
+		st += &format!("            axi_mem[axis_addr] <= axis_write;\n");
+		st += &format!("        end\n    end\n\n");
+	}
+	else {
+		st += "    assign axis_wen = r_axi_wready & w_axi_wvalid;\n";
+		st += &format!("    assign axis_addr = (r_axi_awv_awr_flag) ? r_axi_awaddr[{0}:2] : \n                       (r_axi_arv_arr_flag) ? r_axi_araddr[{0}:2] : 0;", addr_width+1);	
+	}
+
+	st += "    // awready - awv_awr_flag generating\n";
+	st += &format!("    always @( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
+	st += &format!("        if ( {} ) begin\n", _StrOut(tmp.clone().rst));
+	st += &format!("            r_axi_awready <= 1'b0;\n            r_axi_awv_awr_flag <= 1'b0;\n");
+	st += "        end else begin\n";
+	st += &format!("            if (~r_axi_awready && w_axi_awvalid && ~r_axi_awv_awr_flag && ~r_axi_arv_arr_flag ) begin\n");
+	st += &format!("                r_axi_awready <= 1'b1;\n            r_axi_awv_awr_flag <= 1'b1;\n");
+	st += &format!("            end else if ( w_axi_wlast && r_axi_wready ) begin\n                r_axi_awv_awr_flag <= 1'b0;\n");
+	st += &format!("            end else begin\n                r_axi_awready <= 1'b0;\n");
+	st += "            end\n        end\n    end\n\n";
+
+	st += "    // waddress generation\n";
+	st += &format!("    always @( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
+	st += &format!("        if ( {} ) begin\n", _StrOut(tmp.clone().rst));
+	st += &format!("            r_axi_awaddr <= 0;\n            r_axi_awlen_count <= 0;\n            r_axi_awburst <= 0;\n            r_axi_awlen <= 0;\n");
+	st += "        end else begin\n";
+	st += &format!("            if ( ~r_axi_awready && w_axi_awvalid && ~r_axi_awv_awr_flag ) begin\n");
+	st += &format!("                r_axi_awaddr <= i_saxi_awaddr;\n                r_axi_awburst <= i_saxi_awburst;\n                r_axi_awlen <= i_saxi_awlen;\n                r_axi_awlen_count <= 0;\n");
+	st += &format!("            end else if ( ( r_axi_awlen_count <= r_axi_awlen ) && r_axi_wready && w_axi_wvalid ) begin\n");
+	st += &format!("                r_axi_awlen_count <= r_axi_awlen_count + 1;\n\n");
+	st += &format!("                case ( r_axi_awburst )\n");
+	st += &format!("                    2'b00: begin\n                        r_axi_awaddr <= r_axi_awaddr;\n                    end\n");
+	st += &format!("                    2'b01: begin\n                        r_axi_awaddr[{0}:2] <= r_axi_awaddr[{0}:2] + 1;\n                        r_axi_awaddr[1:0] <= 2'b00;\n                    end\n", addr_width+1);
+	st += &format!("                    default: begin\n                        r_axi_awaddr <= r_axi_awaddr[{0}:2] + 1;\n                    end\n                endcase\n", addr_width+1);
+	st += "            end\n        end\n    end\n\n";
+
+	st += "    // wready generation\n";
+	st += &format!("    always @( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
+	st += &format!("        if ( {} ) begin\n", _StrOut(tmp.clone().rst));
+	st += &format!("            r_axi_wready <= 0;\n");
+	st += "        end else begin\n";
+	st += &format!("            if ( ~r_axi_wready && w_axi_wvalid && r_axi_awv_awr_flag ) begin\n                r_axi_wready <= 1'b1;\n            end else begin\n                r_axi_wready <= 1'b0;\n            end\n");
+	st += "        end\n    end\n\n";
+
+	st += "    // write response generation\n";
+	st += &format!("    always @( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
+	st += &format!("        if ( {} ) begin\n", _StrOut(tmp.clone().rst));
+	st += &format!("            r_axi_bvalid <= 0;\n");
+	st += "        end else begin\n";
+	st += &format!("            if ( r_axi_awv_awr_flag && r_axi_wready && w_axi_wvalid && ~r_axi_bvalid && w_axi_wlast ) begin\n");
+	st += &format!("                r_axi_bvalid <= 1'b1;\n");
+	st += &format!("            end else begin\n");
+	st += &format!("                if ( w_axi_bready && r_axi_bvalid ) begin\n                    r_axi_bvalid <= 1'b0;\n                end\n");
+	st += "            end\n        end\n    end\n\n";
+
+	st += "    // arready - arv_arr_flag generation\n";
+	st += &format!("    always @( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
+	st += &format!("        if ( {} ) begin\n", _StrOut(tmp.clone().rst));
+	st += &format!("            r_axi_arready <= 1'b0;\n            r_axi_arv_arr_flag <= 1'b0;\n");
+	st += "        end else begin\n";
+	st += &format!("            if ( ~r_axi_arready && w_axi_arvalid && ~r_axi_awv_awr_flag && ~r_axi_arv_arr_flag ) begin\n");
+	st += &format!("                r_axi_arready <= 1'b1;\n                r_axi_arv_arr_flag <= 1'b1;\n");
+	st += &format!("            end else if ( r_axi_rvalid && w_axi_rready && r_axi_arlen_count == r_axi_arlen ) begin\n                r_axi_arv_arr_flag <= 1'b0;\n");
+	st += &format!("            end else begin\n                r_axi_arready <= 1'b0;\n");
+	st += "            end\n        end\n    end\n\n";
+
+	st += "    // raddress generation\n";
+	st += &format!("    always @( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
+	st += &format!("        if ( {} ) begin\n", _StrOut(tmp.clone().rst));
+	st += &format!("            r_axi_araddr <= 0;\n            r_axi_arlen_count <= 0;\n            r_axi_arburst <= 0;\n            r_axi_arlen <= 0;\n            r_axi_rlast <= 0;\n");
+	st += "        end else begin\n";
+	st += &format!("            if ( ~r_axi_arready && w_axi_arvalid && ~r_axi_arv_arr_flag ) begin\n");
+	st += &format!("                r_axi_araddr <= i_saxi_araddr;\n                r_axi_arburst <= i_saxi_arburst;\n                r_axi_arlen <= i_saxi_arlen;\n                r_axi_arlen_count <= 0;\n                r_axi_rlast <= 0;\n");
+	st += &format!("            end else if ( ( r_axi_arlen_count <= r_axi_arlen ) && r_axi_rvalid && w_axi_rready ) begin\n");
+	st += &format!("                r_axi_arlen_count <= r_axi_arlen_count + 1;\n                r_axi_rlast <= 0;\n");
+	st += &format!("                case ( r_axi_arburst )\n");
+	st += &format!("                    2'b00: begin\n                        r_axi_araddr <= r_axi_araddr;\n                    end\n");
+	st += &format!("                    2'b01: begin\n                        r_axi_araddr[{0}:2] <= r_axi_araddr[{0}:2] + 1;\n                        r_axi_araddr[1:0] <= 2'b00;\n                    end\n", addr_width+1);
+	st += &format!("                    default: begin\n                        r_axi_araddr <= r_axi_araddr[{0}:2];\n                    end\n                endcase\n", addr_width+1);
+	st += &format!("            end else if ( ( r_axi_arlen_count == r_axi_arlen ) && ~r_axi_rlast && r_axi_arv_arr_flag ) begin\n                r_axi_rlast <= 1'b1;\n");
+	st += &format!("            end else if ( w_axi_rready ) begin\n                r_axi_rlast <= 1'b0;\n");
+	st += "            end\n        end\n    end\n\n";
+
+	st += "    // rvalid generation\n";
+	st += &format!("    always @( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
+	st += &format!("        if ( {} ) begin\n", _StrOut(tmp.clone().rst));
+	st += &format!("            r_axi_rvalid <= 0;\n");
+	st += "        end else begin\n";
+	st += &format!("            if ( ~r_axi_wready && w_axi_wvalid && r_axi_awv_awr_flag ) begin\n                r_axi_rvalid <= 1'b1;\n            end else begin\n                r_axi_rvalid <= 1'b0;\n            end\n");
+	st += "        end\n    end\n\n";
+
+	st += "    assign w_axi_wdata[0+:8] = i_saxi_wstrb[0] ? i_saxi_wdata[0+:8] : 0;\n";
+	st += "    assign w_axi_wdata[8+:8] = i_saxi_wstrb[1] ? i_saxi_wdata[8+:8] : 0;\n";
+	st += "    assign w_axi_wdata[16+:8] = i_saxi_wstrb[2] ? i_saxi_wdata[16+:8] : 0;\n";
+	st += "    assign w_axi_wdata[24+:8] = i_saxi_wstrb[3] ? i_saxi_wdata[24+:8] : 0;\n";
+	
+
+	if tmp.mem {
+		st += "\n";
+		st += &format!("    always @( posedge {} ) begin\n", _StrOut(tmp.clone().clk));
+		st += &format!("        r_axi_rdata <= axi_mem[r_axi_araddr[{}:2]];\n", addr_width+1);
+		st += &format!("        axis_read <= axi_mem[axis_addr];\n");
+		st += &format!("    end\n\n");
+	}
+	else {
+		st += "\n";
+		st += &format!("    always @(*) begin\n");
+		if let E::Null = *(tmp.clone().rdata) {
+			st += &format!("        r_axi_rdata <= axis_read;\n");
+		}
+		else {
+			st += &format!("        r_axi_rdata <= {};\n",  _StrOut(tmp.clone().rdata));
+		}
+		st += &format!("    end\n\n");
+		st += &format!("    assign axis_write = w_axi_wdata;\n");
+	}
 
 	return st;
 }
@@ -2813,9 +3119,15 @@ pub struct AXIST;
 #[derive(Debug,Clone)]
 pub struct AXIM;
 
-/// AXI Slave インタフェースの作成 - 未実装
+/// AXI Slave インタフェースの作成 - 作成中
 #[derive(Debug,Clone)]
-pub struct AXIS;
+pub struct AXIS {
+	clk: Box<E>,
+	rst: Box<E>,
+	length: i32,
+	mem: bool,
+	rdata: Box<E>,
+}
 
 /// AXI Slave Lite インタフェースの作成
 #[derive(Debug,Clone)]
@@ -2838,26 +3150,28 @@ pub fn AXIS_Lite_new<T: Into<Box<E>>, U: Into<Box<E>>>(clock: T, reset: U) -> AX
 	}
 }
 
+pub fn AXIS_new<T: Into<Box<E>>, U: Into<Box<E>>>(clock: T, reset: U) -> AXIS {
+	AXIS{
+		clk: clock.into(),
+		rst: reset.into(),
+		length: 0,
+		mem: false,
+		rdata: Box::new(E::Null),
+	}
+}
+
 /// AXI IFのレジスタ設定トレイト
 #[allow(non_camel_case_types)]
 pub trait AXI_S_IF_Set<T> {
 	// 数だけ指定してレジスタを生成
 	fn OrderRegSet(&mut self, num: i32) -> T;
-
-	// レジスタ名を指定してスタック式にレジスタを追加
-	fn NamedRegSet(&mut self, name: &str) -> T;
-
-	// レジスタ番号によるアクセスメソッド
-	fn OrderReg(&mut self, num: i32) -> Box<E>;
-
-	// 対応レジスタへのアクセスメソッド
-	fn NamedReg(&mut self, name: &str) -> Box<E>;
 }
 
 /// ローカルからのレジスタ制御設定トレイト
 #[allow(non_camel_case_types)]
 pub trait AXI_S_IF_LocalWrite<T, U>
 where
+	T: Into<Box<E>>,
     U: Into<Box<E>>,
 {
     fn RegWrite(&mut self, write_en: U, write_data: T);
@@ -2874,8 +3188,10 @@ impl AXI_S_IF_Set<AXISLite> for AXISLite {
 		self.current_reg = num-1;
 		self.clone()
 	}
+}
 
-	fn NamedRegSet(&mut self, name: &str) -> AXISLite {
+impl AXISLite {
+	pub fn NamedRegSet(&mut self, name: &str) -> AXISLite {
 		let reg = wrVar::new().Reg(name, 32);
 		self.reg_array.push(reg);
 		self.wLocal_write.push((Box::new(E::Null), Box::new(E::Null)));
@@ -2883,12 +3199,7 @@ impl AXI_S_IF_Set<AXISLite> for AXISLite {
 		self.clone()
 	}
 
-	fn OrderReg(&mut self, num: i32) -> Box<E> {
-		let SelfReg = self.reg_array.clone();
-		return SelfReg[num as usize].clone();
-	}
-
-	fn NamedReg(&mut self, name: &str) -> Box<E> {
+	pub fn NamedReg(&mut self, name: &str) -> Box<E> {
 		let SelfReg = self.reg_array.clone();
 		for x in SelfReg {
 			let Nx = *x.clone();
@@ -2899,6 +3210,70 @@ impl AXI_S_IF_Set<AXISLite> for AXISLite {
 			}
 		}
 		return Box::new(E::Null)
+	}
+
+	pub fn OrderReg(&mut self, num: i32) -> Box<E> {
+		let SelfReg = self.reg_array.clone();
+		return SelfReg[num as usize].clone();
+	}
+}
+
+impl AXI_S_IF_Set<AXIS> for AXIS {
+	fn OrderRegSet(&mut self, num: i32) -> AXIS {
+		self.length = num;
+		self.clone()
+	}
+}
+
+#[allow(non_camel_case_types)]
+pub trait AXIS_RegControl {
+	fn write(&mut self) -> Box<E>;
+
+	fn addr(&mut self) -> Box<E>;
+
+	fn wen(&mut self) -> Box<E>;
+
+	fn mem_if(&mut self) -> (Box<E>, Box<E>, Box<E>, Box<E>);
+} 
+
+
+// AXI4full ジェネレータを作成
+#[allow(non_camel_case_types)]
+impl AXIS_RegControl for AXIS {
+	fn write(&mut self) -> Box<E> {
+		wrVar::new().Wire("axis_write", 32)
+	}
+
+	fn addr(&mut self) -> Box<E> {
+		wrVar::new().Wire("axis_addr", 32)
+	}
+
+	fn wen(&mut self) -> Box<E> {
+		wrVar::new().Wire("axis_wen", 1)
+	}
+
+	fn mem_if(&mut self) -> (Box<E>, Box<E>, Box<E>, Box<E>) {
+		self.mem = true;
+		(wrVar::new().Wire("axis_read", 32), wrVar::new().Wire("axis_write", 32), wrVar::new().Wire("axis_wen", 1), wrVar::new().Wire("axis_addr", 32))
+	}
+}
+
+#[allow(non_camel_case_types)]
+pub trait AXIS_readcontrol<T>
+where
+	T:Into<Box<E>>,
+{
+	fn read(&mut self, rdata: T) -> AXIS;
+}
+
+#[allow(non_camel_case_types)]
+impl<T> AXIS_readcontrol<T> for AXIS
+where
+	T: Into<Box<E>>,
+{
+	fn read(&mut self, rdata: T) -> AXIS {
+		self.rdata = rdata.into();
+		self.clone()
 	}
 }
 
