@@ -76,7 +76,7 @@ use Verugent::core::*;
 
 ```text
 [dependencies]  
-Verugent = "0.1.2"
+Verugent = "0.1.3"
 ```
 
 **2. Declare the use of the core and macro within the block to be used.**  
@@ -256,4 +256,5 @@ Update history
 2019/04/30:  Add AXI Slave Lite interface generator and code generator  
 2019/07/07:  Minor bugfix  
 2019/08/31:  Bugfix at AXI-Lite port generator  
-2019/09/03:  Adjustment of "Function" generator 
+2019/09/03:  Adjustment of "Function" generator  
+2020/01/22:  Add AXI Slave Full interface generator  

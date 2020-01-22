@@ -1,6 +1,6 @@
 [package]
 name = "verugent"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Mercye"]
 
 license-file = "license.txt"
@@ -8,3 +8,7 @@ description = "Rust to Verilog: Hardware Discription DSL library."
 repository = "https://github.com/RuSys/Verugent"
 readme = "README.md"
 keywords = ["verilog", "rust-verilog", "verugent"]
+
+[dependencies]
+regex = "*"
+ansi_term = "*"
