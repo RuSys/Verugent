@@ -1021,7 +1021,7 @@ impl Assign {
   **/
 #[derive(Clone,Debug)]
 pub struct Always{
-    br      : String,
+    bl      : String,
     stmt    : Vec<Box<E>>,
     P_edge  : Vec<wrVar>,
     N_edge  : Vec<wrVar>,
@@ -1030,7 +1030,7 @@ pub struct Always{
 /// Always構文内使用の立ち上がり信号設定構文
 pub fn Posedge<T: Into<Box<E>>>(edge: T) -> Always {
     let e = *edge.into();
-    let mut tmp = Always{br: "brock".to_string(), stmt: Vec::new(), P_edge: Vec::new(), N_edge: Vec::new()};
+    let mut tmp = Always{bl: "block".to_string(), stmt: Vec::new(), P_edge: Vec::new(), N_edge: Vec::new()};
     match e {
         E::Ldc(wr) => tmp.P_edge.push(wr.clone()),
         _ => return tmp,
@@ -1041,7 +1041,7 @@ pub fn Posedge<T: Into<Box<E>>>(edge: T) -> Always {
 /// Always構文内使用の立ち下り信号設定構文
 pub fn Negedge<T: Into<Box<E>>>(edge: T) -> Always {
     let e = *edge.into();
-    let mut tmp = Always{br: "brock".to_string(), stmt: Vec::new(), P_edge: Vec::new(), N_edge: Vec::new()};
+    let mut tmp = Always{bl: "block".to_string(), stmt: Vec::new(), P_edge: Vec::new(), N_edge: Vec::new()};
     match e {
         E::Ldc(wr) => tmp.N_edge.push(wr.clone()),
         _ => return tmp,
@@ -1051,7 +1051,7 @@ pub fn Negedge<T: Into<Box<E>>>(edge: T) -> Always {
 
 /// Always構文内使用の信号未設定構文
 pub fn Nonedge() -> Always {
-    Always{br: "brock".to_string(), stmt: Vec::new(), P_edge: Vec::new(), N_edge: Vec::new()}
+    Always{bl: "block".to_string(), stmt: Vec::new(), P_edge: Vec::new(), N_edge: Vec::new()}
 }
 
 /**
@@ -1061,23 +1061,23 @@ pub fn Nonedge() -> Always {
 impl Always {
     // Debug
     pub fn new() -> Always {
-        Always{br: "brock".to_string(), stmt: Vec::new(), P_edge: Vec::new(), N_edge: Vec::new()}
+        Always{bl: "block".to_string(), stmt: Vec::new(), P_edge: Vec::new(), N_edge: Vec::new()}
     }
 
     /// debug:外部出力
     fn blockout(&mut self) ->String {
-        self.br.clone()
+        self.bl.clone()
     }
 
     /// ブロッキング設定
     pub fn block(&mut self)-> Always {
-        self.br = "brock".to_string();
+        self.bl = "block".to_string();
         self.clone()
     }
 
     /// ノンブロッキング設定
     pub fn non(&mut self)-> Always {
-        self.br = "Non".to_string();
+        self.bl = "Non".to_string();
         self.clone()
     }
 
@@ -2176,7 +2176,7 @@ fn DecompAST(Parenthesis: bool, ast: Box<E>, cnfg: &str, indent: i32) -> String{
                 st += "    ";
             }
             st += &DecompAST(false, l.clone(),cnfg, indent);
-            if cnfg.to_string() == "brock".to_string() {
+            if cnfg.to_string() == "block".to_string() {
                 st += " = ";
             }
             else {
