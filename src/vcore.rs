@@ -2488,7 +2488,7 @@ fn PrintFunction(Function: Vec<Func_AST>) -> String {
         }
 		st += "\n    );\n";
         for s in x.stmt {
-            st += &DecompAST(false, s, "", 2);
+            st += &DecompAST(false, s, "block", 2);
         }
         st += "    endfunction\n\n";
     }
