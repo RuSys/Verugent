@@ -11,3 +11,5 @@ mod tests {
 }
 
 pub mod vcore;
+
+pub mod check;
