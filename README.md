@@ -37,6 +37,31 @@ You can build up design written in Verilog HDL with less failure by using the Ru
 破綻の少ないハードウェアコードの設計が可能です。  
 (現時点で、機能や安全性にやや不安が残るので今後の課題ということで…)    
 
+Publicaton
+========================================
+
+If you use VeRuGent in your research, please cite my paper.  
+もし研究に本システムを使って頂けるなら、以下の情報から引用いただけると嬉しいです。
+
+
+- Takano, K., Oda, T., Kohata, M. (2020). Design of a DSL for Converting Rust Programming Language into RTL. In: Barolli, L., Okada, Y., Amato, F. (eds) Advances in Internet, Data and Web Technologies. EIDWT 2020. Lecture Notes on Data Engineering and Communications Technologies, vol 47. Springer, Cham. 
+[Paper](https://link.springer.com/chapter/10.1007/978-3-030-39746-3_36)
+
+```
+@InProceedings{Takano:2020:EIDWT:VeRuGent,
+author="Takano, Keisuke
+and Oda, Tetsuya
+and Kohata, Masaki",
+title="Design of a DSL for Converting Rust Programming Language into RTL",
+booktitle="Advances in Internet, Data and Web Technologies",
+year="2020",
+publisher="Springer International Publishing",
+address="Cham",
+pages="342--350",
+isbn="978-3-030-39746-3"
+}
+```
+
 Requirements (推奨環境)
 ========================================
 
@@ -258,3 +283,4 @@ Update history
 2019/08/31:  Bugfix at AXI-Lite port generator  
 2019/09/03:  Adjustment of "Function" generator  
 2020/01/22:  Add AXI Slave Full interface generator  
+2023/06/29:  Add Citation Information to README.
